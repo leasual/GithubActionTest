@@ -24,7 +24,7 @@ jobs:
       - name: Logging
         run: |
           echo "${{toJSON(github.event)}}"
-          echo "${{ contains(${{ github.event.head_commit.message }}, 'SEBP') }}"
+          echo "${{contains(${{github.event.head_commit.message}}, 'SEBP')}}"
   build:
     runs-on: ubuntu-latest
     steps:
