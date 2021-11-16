@@ -33,10 +33,10 @@ jobs:
     #     arch: 'arm'
     #     install-location: 'toolchains'
 
-    - name: Grant execute permission for gradlew
+    - name: Grant execute lint 
       run: chmod +x gradlew
     - name: Build with Gradle
-      run: ./gradlew assembleRelease
+      run: ./gradlew lint
  
 
     # - uses: actions/checkout@v1
@@ -53,5 +53,5 @@ jobs:
     # - run: fir publish  app/build/outputs/apk/release/app-release.apk
     - name: Upload apk to Pgyer
       #GitHub 工作空间目录路径，初始为空白。 例如 /home/runner/work/my-repo-name/my-repo-name。 actions/checkout 操作将在此目录内检出文件，默认情况下是仓库的副本。
-
+      if: contains(${{ github.event.head_commit.message }}, 'SEBP')
       run: curl -F 'file=@${{ github.workspace }}/app/build/outputs/apk/release/app-release-unsigned.apk' -F '_api_key=${{secrets.PGYER_API_KEY}}' https://www.pgyer.com/apiv2/app/upload
