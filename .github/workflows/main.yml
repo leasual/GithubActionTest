@@ -35,10 +35,13 @@ jobs:
 
     - name: Grant execute lint 
       run: chmod +x gradlew
-    - name: Build with Gradle
+    - name: Check lint with Gradle
       run: ./gradlew lint
  
 
+    - name: Build with Gradle
+      if: contains(${{ github.event.head_commit.message }}, 'SEBP')
+      run: ./gradle assembleRelease
     # - uses: actions/checkout@v1
     #   id: cache
     #   with:
