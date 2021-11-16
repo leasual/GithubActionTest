@@ -17,15 +17,15 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 jobs:
-  log-github-event-goodies:
-    name: "LOG Everything on GitHub Event"
-    runs-on: ubuntu-latest
-    steps:
-      - name: Logging
-        run: |
-          echo "${{toJSON(github.event)}}"
-          echo "::set-output name=message::${{github.event.head_commit.message}}"
-  lint_check:
+  # log-github-event-goodies:
+  #   name: "LOG Everything on GitHub Event"
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Logging
+  #       run: |
+  #         echo "${{toJSON(github.event)}}"
+  #         echo "::set-output name=message::${{github.event.head_commit.message}}"
+  build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -46,6 +46,10 @@ jobs:
     - name: Check lint with Gradle
       run: ./gradlew lint
  
+    - name: Get latest commit message
+      run: |
+        echo "${{ github.event.head_commit.message }}"
+        echo "::set-output name=message::${{ github.event.head_commit.message }}"
 
     - name: Build with Gradle
       if: contains(${{ steps.SetVariables.outputs.message }}, 'SEBP')
@@ -65,4 +69,5 @@ jobs:
     - name: Upload apk to Pgyer
       #GitHub 工作空间目录路径，初始为空白。 例如 /home/runner/work/my-repo-name/my-repo-name。 actions/checkout 操作将在此目录内检出文件，默认情况下是仓库的副本。
       if: contains(${{ github.event.head_commit.message }}, 'SEBP')
-      run: curl -F 'file=@${{ github.workspace }}/app/build/outputs/apk/release/app-release-unsigned.apk' -F '_api_key=${{secrets.PGYER_API_KEY}}' https://www.pgyer.com/apiv2/app/upload
+      run: |
+        curl -F 'file=@${{ github.workspace }}/app/build/outputs/apk/release/app-release-unsigned.apk' -F '_api_key=${{secrets.PGYER_API_KEY}}' https://www.pgyer.com/apiv2/app/upload
