@@ -41,7 +41,7 @@ jobs:
 
     - name: Build with Gradle
       if: contains(${{ github.event.head_commit.message }}, 'SEBP')
-      run: ./gradle assembleRelease
+      run: ./gradlew assembleRelease
     # - uses: actions/checkout@v1
     #   id: cache
     #   with:
