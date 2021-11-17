@@ -55,7 +55,7 @@ jobs:
     - name: Build with Gradle
       if: ${{ contains(${{ steps.commit_message.outputs.message }}, 'SEBP') }}
       run: |
-      ./gradlew assembleRelease
+        ./gradlew assembleRelease
     # - uses: actions/checkout@v1
     #   id: cache
     #   with:
