@@ -6,9 +6,9 @@ name: Android CI
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 env:
   APK_FILE_PATH: android/app/build/outputs/apk/release
@@ -26,19 +26,28 @@ jobs:
       with:
         java-version: '11'
         distribution: 'adopt'
-    - name: set up NDK
-      uses: ravinderjangra/android-ndk-toolchain-setup@0.2
-      with:
-        api: '21'
-        arch: 'arm'
-        install-location: 'toolchains'
+    # - name: set up NDK
+    #   uses: ravinderjangra/android-ndk-toolchain-setup@0.2
+    #   with:
+    #     api: '21'
+    #     arch: 'arm'
+    #     install-location: 'toolchains'
 
-    - name: Grant execute permission for gradlew
+    - name: Grant execute lint 
       run: chmod +x gradlew
-    - name: Build with Gradle
-      run: ./gradlew assembleRelease
+    - name: Check lint with Gradle
+      run: ./gradlew lint
  
-
+    - name: Get latest commit message
+      id: commit_message
+      run: |
+        echo "${{ github.event.head_commit.message }}"
+        echo "::set-output name=message::${{ github.event.head_commit.message }}"
+        
+    - name: Build with Gradle
+      if: contains(steps.commit_message.outputs.message, '[SEBP]')
+      run: |
+        ./gradlew assembleRelease
     # - uses: actions/checkout@v1
     #   id: cache
     #   with:
@@ -52,4 +61,8 @@ jobs:
     #   run: fir login ${{ secrets.FIRTOKEN }}
     # - run: fir publish  app/build/outputs/apk/release/app-release.apk
     - name: Upload apk to Pgyer
-      run: curl -F 'file=@${{env.APK_FILE_PATH}}/${{env.APK_FILE_NAME}}' -F '_api_key=${{secrets.PGYER_API_KEY}}' https://www.pgyer.com/apiv2/app/upload
+      #GitHub 工作空间目录路径，初始为空白。 例如 /home/runner/work/my-repo-name/my-repo-name。 actions/checkout 操作将在此目录内检出文件，默认情况下是仓库的副本。
+      if: contains(steps.commit_message.outputs.message, '[SEBP]')
+      run: |
+        curl -F 'file=@${{ github.workspace }}/app/build/outputs/apk/release/app-release-unsigned.apk' -F '_api_key=${{secrets.PGYER_API_KEY}}' https://www.pgyer.com/apiv2/app/upload
+

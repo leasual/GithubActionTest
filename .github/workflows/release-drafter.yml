@@ -40,6 +40,4 @@ version-resolver:
     labels:
       - 'patch'
   default: patch
-template: |
-  ## 版本变化  What’s Changed
-  $CHANGES
+template: '$CHANGES'
