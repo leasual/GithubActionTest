@@ -29,7 +29,6 @@ exclude-labels:
   - '无需处理'
   - 'wontfix'
 change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
-template: '$CHANGES'
 version-resolver:
   major:
     labels:
@@ -41,4 +40,6 @@ version-resolver:
     labels:
       - 'patch'
   default: patch
-
+template: |
+  ## 版本变化  What’s Changed
+  $CHANGES
