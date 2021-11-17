@@ -56,7 +56,7 @@ jobs:
       if: contains(steps.commit_message.outputs.message, '[SEBP]')
       uses: damienaicheh/update-android-version-gradle-action@v1.0.0
       with:
-        build-gradle-path: '${{ github.workspace }}/app/build.gradle'
+        build-gradle-path: './${{ github.workspace }}/app/build.gradle'
         version-code: ${{ env.NUMBER_OF_COMMITS }}
         version-name: '${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}'
         print-file: true
