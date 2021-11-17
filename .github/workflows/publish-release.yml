@@ -30,7 +30,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GIT_API_TOKEN }}
         with:
-          config-name: release-config.yml
+          config-name: release-drafter.yml
           version: ${{ steps.get_version.outputs.TAG }}
           tag: ${{ steps.get_version.outputs.TAG }}
       # - name: Publish Release
