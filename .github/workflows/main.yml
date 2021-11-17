@@ -6,13 +6,13 @@ name: Android CI
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
-env:
-  APK_FILE_PATH: android/app/build/outputs/apk/release
-  APK_FILE_NAME: app-release.apk
+# env:
+#   APK_FILE_PATH: android/app/build/outputs/apk/release
+#   APK_FILE_NAME: app-release.apk
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -43,7 +43,6 @@ jobs:
       run: |
         echo "${{ github.event.head_commit.message }}"
         echo "::set-output name=message::${{ github.event.head_commit.message }}"
-        
     - name: Build with Gradle
       if: contains(steps.commit_message.outputs.message, '[SEBP]')
       run: |
@@ -65,4 +64,3 @@ jobs:
       if: contains(steps.commit_message.outputs.message, '[SEBP]')
       run: |
         curl -F 'file=@${{ github.workspace }}/app/build/outputs/apk/release/app-release-unsigned.apk' -F '_api_key=${{secrets.PGYER_API_KEY}}' https://www.pgyer.com/apiv2/app/upload
-
