@@ -45,7 +45,13 @@ jobs:
       run: chmod +x gradlew
     - name: Check lint with Gradle
       run: ./gradlew lint
-    
+ 
+    - name: Get latest commit message
+      id: commit_message
+      run: |
+        echo "${{ github.event.head_commit.message }}"
+        echo "::set-output name=message::${{ github.event.head_commit.message }}"
+
     - name: Update gradle version for Android
       if: contains(steps.commit_message.outputs.message, '[SEBP]')
       uses: damienaicheh/update-android-version-gradle-action@v1.0.0
@@ -54,13 +60,7 @@ jobs:
         version-code: ${{ env.NUMBER_OF_COMMITS }}
         version-name: '${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}'
         print-file: true
- 
-    - name: Get latest commit message
-      id: commit_message
-      run: |
-        echo "${{ github.event.head_commit.message }}"
-        echo "::set-output name=message::${{ github.event.head_commit.message }}"
-
+    
     - name: Build with Gradle
       if: contains(steps.commit_message.outputs.message, '[SEBP]')
       run: |
