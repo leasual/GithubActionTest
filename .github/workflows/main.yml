@@ -51,6 +51,7 @@ jobs:
       run: |
         echo "${{ github.event.head_commit.message }}"
         echo "::set-output name=message::${{ github.event.head_commit.message }}"
+        echo "${{ env.NUMBER_OF_COMMITS }} version=${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}"
 
     - name: Update gradle version for Android
       if: contains(steps.commit_message.outputs.message, '[SEBP]')
