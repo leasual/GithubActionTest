@@ -46,7 +46,7 @@ jobs:
         chmod +x gradlew
     - name: Check lint with Gradle
       run: |
-        ./gradlew lint
+        #./gradlew lint
  
     - name: Get latest commit message
       id: commit_message
@@ -56,9 +56,12 @@ jobs:
     
     - name: Prepare Version Tags
       run: |
+        echo "$GITHUB_REF"
         echo "MAJOR=$(echo ${GITHUB_REF/refs\/tags\//} | awk -F'.' '{print $1}')" >> $GITHUB_ENV
         echo "MINOR=$(echo ${GITHUB_REF/refs\/tags\//} | awk -F'.' '{print $1"."$2}')" >> $GITHUB_ENV
         echo "PATCH=$(echo ${GITHUB_REF/refs\/tags\//} | awk -F'.' '{print $1"."$2"."$3}')" >> $GITHUB_ENV
+        REF_TAG="$(sed -E 's/[^a-zA-Z0-9]/-/g;s/(^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$)//g' <<< "${BRANCH_REF}" | tr '[:upper:]' '[:lower:]')"
+        echo "$REF_TAG"
 
     - name: Update gradle version for Android
       if: contains(steps.commit_message.outputs.message, '[SEBP]')
