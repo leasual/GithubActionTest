@@ -42,23 +42,30 @@ jobs:
     #     install-location: 'toolchains'
 
     - name: Grant execute lint 
-      run: chmod +x gradlew
+      run: |
+        chmod +x gradlew
     - name: Check lint with Gradle
-      run: ./gradlew lint
+      run: |
+        ./gradlew lint
  
     - name: Get latest commit message
       id: commit_message
       run: |
         echo "${{ github.event.head_commit.message }}"
         echo "::set-output name=message::${{ github.event.head_commit.message }}"
-        echo "${{ env.NUMBER_OF_COMMITS }} version=${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}"
+    
+    - name: Prepare Version Tags
+      run: |
+        echo "MAJOR=$(echo ${GITHUB_REF/refs\/tags\//} | awk -F'.' '{print $1}')" >> $GITHUB_ENV
+        echo "MINOR=$(echo ${GITHUB_REF/refs\/tags\//} | awk -F'.' '{print $1"."$2}')" >> $GITHUB_ENV
+        echo "PATCH=$(echo ${GITHUB_REF/refs\/tags\//} | awk -F'.' '{print $1"."$2"."$3}')" >> $GITHUB_ENV
 
     - name: Update gradle version for Android
       if: contains(steps.commit_message.outputs.message, '[SEBP]')
       uses: damienaicheh/update-android-version-gradle-action@v1.0.0
       with:
         build-gradle-path: '${{ github.workspace }}/app/build.gradle'
-        version-code: ${{ env.NUMBER_OF_COMMITS }}
+        version-code: ${{ github.run_number }}  #${{ env.NUMBER_OF_COMMITS }}
         version-name: '${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}'
         print-file: true
     
