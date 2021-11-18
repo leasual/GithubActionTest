@@ -56,7 +56,7 @@ jobs:
     
     - name: Prepare Version Tags
       run: |
-        echo "$GITHUB_REF"
+        echo "${GITHUB_REF#refs/tags/*}"
         echo "MAJOR=$(echo ${GITHUB_REF/refs\/tags\//} | awk -F'.' '{print $1}')" >> $GITHUB_ENV
         echo "MINOR=$(echo ${GITHUB_REF/refs\/tags\//} | awk -F'.' '{print $1"."$2}')" >> $GITHUB_ENV
         echo "PATCH=$(echo ${GITHUB_REF/refs\/tags\//} | awk -F'.' '{print $1"."$2"."$3}')" >> $GITHUB_ENV
