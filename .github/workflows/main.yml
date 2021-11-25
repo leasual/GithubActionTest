@@ -57,7 +57,7 @@ jobs:
       id: current_tag
       run: |
         currentTag=${{ steps.previoustag.outputs.tag }} 
-        echo "::set-output name=tag::${$currentTag#*v}"
+        echo "::set-output name=tag::${currentTag#*v}"
 
     - name: Update gradle version for Android
       if: contains(steps.commit_message.outputs.message, '[SEBP]')
