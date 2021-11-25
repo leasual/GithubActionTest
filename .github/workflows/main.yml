@@ -52,8 +52,8 @@ jobs:
       uses: "WyriHaximus/github-action-get-previous-tag@v1"
       with:
         fallback: 1.0.0 # Optional fallback tag to use when no tag can be found
-        
-    -name: 'get correct tag only number'
+
+    - name: 'get correct tag only number'
       id: current_tag
       run: |
         currentTag = echo${#*v}
