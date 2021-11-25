@@ -9,6 +9,8 @@ on:
     branches: [ develop ]
   pull_request:
     branches: [ develop ]
+  schedule:
+    - cron: '30 17 * * *'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -50,6 +52,12 @@ jobs:
       uses: "WyriHaximus/github-action-get-previous-tag@v1"
       with:
         fallback: 1.0.0 # Optional fallback tag to use when no tag can be found
+        
+    -name: 'get correct tag only number'
+      id: current_tag
+      run: |
+        currentTag = echo${#*v}
+        echo "::set-output name=tag::${{ echo${${{ steps.previoustag.outputs.tag }}#*v} }}"
 
     - name: Update gradle version for Android
       if: contains(steps.commit_message.outputs.message, '[SEBP]')
@@ -57,10 +65,10 @@ jobs:
       with:
         build-gradle-path: '${{ github.workspace }}/app/build.gradle'
         version-code: ${{ github.run_number }}  #${{ env.NUMBER_OF_COMMITS }}
-        version-name: ${{ steps.previoustag.outputs.tag }}
+        version-name: ${{ steps.current_tag.outputs.tag }}
         print-file: true
     
-    - name: Build with Gradle
+    - name: 'Build with Gradle'
       if: contains(steps.commit_message.outputs.message, '[SEBP]')
       run: |
         ./gradlew assembleRelease
