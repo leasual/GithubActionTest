@@ -34,12 +34,12 @@ jobs:
     #     arch: 'arm'
     #     install-location: 'toolchains'
 
-    - name: Grant execute lint 
-      run: |
-        chmod +x gradlew
-    - name: Check lint with Gradle
-      run: |
-        ./gradlew lint
+    # - name: Grant execute lint 
+    #   run: |
+    #     chmod +x gradlew
+    # - name: Check lint with Gradle
+    #   run: |
+    #     ./gradlew lint
  
     - name: Get latest commit message
       id: commit_message
@@ -57,7 +57,7 @@ jobs:
       id: current_tag
       run: |
         ${{ steps.previoustag.outputs.tag }} 
-        echo "::set-output name=tag::${$0#*v}"
+        echo "::set-output name=tag::${{ ${$0#*v} }}"
 
     - name: Update gradle version for Android
       if: contains(steps.commit_message.outputs.message, '[SEBP]')
@@ -68,10 +68,10 @@ jobs:
         version-name: ${{ steps.current_tag.outputs.tag }}
         print-file: true
     
-    - name: 'Build with Gradle'
-      if: contains(steps.commit_message.outputs.message, '[SEBP]')
-      run: |
-        ./gradlew assembleRelease
+    # - name: 'Build with Gradle'
+    #   if: contains(steps.commit_message.outputs.message, '[SEBP]')
+    #   run: |
+    #     ./gradlew assembleRelease
     # - uses: actions/checkout@v1
     #   id: cache
     #   with:
@@ -84,18 +84,18 @@ jobs:
     # - name: Upload to Fir.im
     #   run: fir login ${{ secrets.FIRTOKEN }}
     # - run: fir publish  app/build/outputs/apk/release/app-release.apk
-    - name: Upload apk to Pgyer
-      #GitHub 工作空间目录路径，初始为空白。 例如 /home/runner/work/my-repo-name/my-repo-name。 actions/checkout 操作将在此目录内检出文件，默认情况下是仓库的副本。
-      if: contains(steps.commit_message.outputs.message, '[SEBP]')
-      run: |
-        curl -F 'file=@${{ github.workspace }}/app/build/outputs/apk/release/app-release-unsigned.apk' -F '_api_key=${{secrets.PGYER_API_KEY}}' https://www.pgyer.com/apiv2/app/upload
+    # - name: Upload apk to Pgyer
+    #   #GitHub 工作空间目录路径，初始为空白。 例如 /home/runner/work/my-repo-name/my-repo-name。 actions/checkout 操作将在此目录内检出文件，默认情况下是仓库的副本。
+    #   if: contains(steps.commit_message.outputs.message, '[SEBP]')
+    #   run: |
+    #     curl -F 'file=@${{ github.workspace }}/app/build/outputs/apk/release/app-release-unsigned.apk' -F '_api_key=${{secrets.PGYER_API_KEY}}' https://www.pgyer.com/apiv2/app/upload
 
-    - name: Send custom JSON data to Slack workflow
-      id: slack
-      if: contains(steps.commit_message.outputs.message, '[SEBP]')
-      uses: slackapi/slack-github-action@v1.16.0
-      with:
-        payload: "{\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"You have a new request: \"}},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Type:* Computer (laptop)\"},{\"type\":\"mrkdwn\",\"text\":\"*When:* Submitted Aut 10\"}]}]}"
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+    # - name: Send custom JSON data to Slack workflow
+    #   id: slack
+    #   if: contains(steps.commit_message.outputs.message, '[SEBP]')
+    #   uses: slackapi/slack-github-action@v1.16.0
+    #   with:
+    #     payload: "{\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"You have a new request: \"}},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Type:* Computer (laptop)\"},{\"type\":\"mrkdwn\",\"text\":\"*When:* Submitted Aut 10\"}]}]}"
+    #   env:
+    #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    #     SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
