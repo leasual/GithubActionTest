@@ -55,9 +55,8 @@ jobs:
 
     - name: 'get correct tag only number'
       id: current_tag
-      run: |
-        currentTag = ${{ steps.previoustag.outputs.tag }}
-        echo "::set-output name=tag::${{ echo ${currentTag#*v} }}"
+      run: | 
+        echo "::set-output name=tag::${{ ${${{ steps.previoustag.outputs.tag }}#*v} }}"
 
     - name: Update gradle version for Android
       if: contains(steps.commit_message.outputs.message, '[SEBP]')
