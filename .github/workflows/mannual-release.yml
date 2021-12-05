@@ -2,10 +2,10 @@ name: Android构建
 on:
   workflow_dispatch:
     inputs:
-      buildBranch:
-        description: '输入构建分支(develop/main/fix)'
-        required: true
-        default: 'develop'
+      # buildBranch:
+      #   description: '输入构建分支(develop/main/fix)'
+      #   required: true
+      #   default: 'develop'
       uploadArtifact:
         description: '是否将生成的apk上传到 Github Artifact (true/false)'
         required: false
@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0 # Required due to the weg Git works, without it this action won't be able to find any or the correct tags
-          ref: ${{ github.event.inputs.buildBranch }}
+          # ref: ${{ github.event.inputs.buildBranch }}
       - name: set up JDK 11
         uses: actions/setup-java@v2
         with:
@@ -53,7 +53,8 @@ jobs:
       - shell: bash
         if: ${{ steps.lastest_commit.id }} == "7bc94acd9e7fa20dee06f5f217566f07c189e415"
         run: |
-          "7bc94acd9e7fa20dee06f5f217566f07c189e415" > dev-last-commit.txt
+          init_id="7bc94acd9e7fa20dee06f5f217566f07c189e415"
+          $init_id > dev-last-commit.txt
       - name: Upload init commid id firstly
         uses: actions/upload-artifact@v2
         with:
