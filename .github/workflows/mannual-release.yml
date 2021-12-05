@@ -52,10 +52,12 @@ jobs:
         #   echo "::set-output name=id::${{ github.event.head_commit.id }}"
         # trigger by mannual
         run: |
-          echo "::set-output name=message::$(git log --format=%B -n 1)"
-          echo "::set-output name=id::$(git rev-parse HEAD)"
-          echo "${{ steps.lastest_commit.id }}"
-          echo "${{ steps.lastest_commit.message }}"
+          commit_message=$(git log --format=%B -n 1)
+          commit_id=$(git log -1 --format='%H)
+          echo "::set-output name=message::$commit_message"
+          echo "::set-output name=id::$commit_id"
+          echo "$commit_message"
+          echo "$commit_id"
 
       - shell: bash
         if: ${{ steps.lastest_commit.id }} == "7bc94acd9e7fa20dee06f5f217566f07c189e415"
