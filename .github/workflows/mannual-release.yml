@@ -16,9 +16,9 @@ on:
         default: 'true'
 
 env:
-  GITLAB_REPO_URL: ${{ secrets.GITLAB_REPO_URL }}
-  WECOM_WEBHOOK_KEY: ${{ secrets.WECOM_WEBHOOK_KEY }}
-  MENTION_MOBILE_LIST: ${{ secrets.MENTION_MOBILE_LIST }}
+  # GITLAB_REPO_URL: ${{ secrets.GITLAB_REPO_URL }}
+  # WECOM_WEBHOOK_KEY: ${{ secrets.WECOM_WEBHOOK_KEY }}
+  # MENTION_MOBILE_LIST: ${{ secrets.MENTION_MOBILE_LIST }}
 
 jobs:
   build-android:
@@ -44,18 +44,23 @@ jobs:
 
       - name: Get latest commit id and message
         id: lastest_commit
+        # trigger by event
+        # run: |
+        #   echo "${{ github.event.head_commit.message }}"
+        #   echo "::set-output name=message::${{ github.event.head_commit.message }}"
+        #   echo "${{ github.event.head_commit.id }}"
+        #   echo "::set-output name=id::${{ github.event.head_commit.id }}"
+        # trigger by mannual
         run: |
-          echo "${{ github.event.head_commit.message }}"
-          echo "::set-output name=message::${{ github.event.head_commit.message }}"
-          echo "${{ github.event.head_commit.id }}"
-          echo "::set-output name=id::${{ github.event.head_commit.id }}"
+          echo "::set-output name=message::$(git log --format=%B -n 1)"
+          echo "::set-output name=id::$(git rev-parse HEAD)"
 
       - shell: bash
         if: ${{ steps.lastest_commit.id }} == "7bc94acd9e7fa20dee06f5f217566f07c189e415"
         run: |
-          init_id="7bc94acd9e7fa20dee06f5f217566f07c189e415"
-          $init_id > dev-last-commit.txt
+          expr "7bc94acd9e7fa20dee06f5f217566f07c189e415" > dev-last-commit.txt
       - name: Upload init commid id firstly
+        if: ${{ steps.lastest_commit.id }} == "7bc94acd9e7fa20dee06f5f217566f07c189e415"
         uses: actions/upload-artifact@v2
         with:
           name: dev-last-commit
