@@ -1,0 +1,106 @@
+name: Android构建
+on:
+  workflow_dispatch:
+    inputs:
+      buildBranch:
+        description: '输入构建分支(develop/main/fix)'
+        required: true
+        default: 'develop'
+      uploadArtifact:
+        description: '是否将生成的apk上传到 Github Artifact (true/false)'
+        required: false
+        default: 'false'
+      uploadCloud:
+        description: '是否将生成的apk上传到蒲公英。(true/false)'
+        required: true
+        default: 'true'
+
+env:
+  GITLAB_REPO_URL: ${{ secrets.GITLAB_REPO_URL }}
+  WECOM_WEBHOOK_KEY: ${{ secrets.WECOM_WEBHOOK_KEY }}
+  MENTION_MOBILE_LIST: ${{ secrets.MENTION_MOBILE_LIST }}
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0 # Required due to the weg Git works, without it this action won't be able to find any or the correct tags
+          ref: ${{ github.event.inputs.buildBranch }}
+      - name: set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+      - name: Grant execute lint 
+        run: |
+          chmod +x gradlew
+
+      # - name: Check lint with Gradle
+      #   run: |
+      #     ./gradlew lint
+
+      - name: Get latest commit id and message
+        id: commit_message
+        run: |
+          echo "commit_message=${{ github.event.head_commit.message }}" >> $GITHUB_ENV
+          echo "commid_id_lastest=${{ github.event.head_commit.id }}" >> $GITHUB_ENV
+
+      - name: Download last commit id
+        uses: actions/download-artifact@v2
+        with:
+          name: dev-last-commit
+      - shell: bash
+        run: |
+          id="$(cat dev-last-commit.txt)"
+          echo "commit_id_last=$id" >> $GITHUB_ENV
+          $commid_id_lastest > dev-last-commit.txt
+
+      - name: Upload lastest commid id 
+        uses: actions/upload-artifact@v2
+        with:
+          name: dev-last-commit
+          path: dev-last-commit.txt
+
+      - name: Generate a changelog
+        if: $commid_id_lastest != $commit_id_last
+        uses: orhun/git-cliff-action@v1
+        with:
+          config: cliff.toml
+          args: $commit_id_last..HEAD
+        env:
+          OUTPUT: CHANGELOG.md
+
+      
+
+      # - name: Upload Artifact
+      #   if: ${{ github.event.inputs.uploadArtifact == 'true' }}
+      #   uses: actions/upload-artifact@v1
+      #   with:
+      #     name: app-release.apk
+      #     path: android/app/build/outputs/apk/release/
+      # - name: Upload Artifact Success
+        # if: ${{ github.event.inputs.uploadArtifact == 'true' }}
+        # run: |
+        #   npm i request
+        #   node ./send-success.js "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" "${{ github.event.inputs.uploadCloud }}"  "Android"  "${{ github.event.inputs.buildBranch }}"
+      # - name: Push to Fir
+        # id: PushToFir
+        # run: |
+        #   curl -F 'file=@${{ github.workspace }}/app/build/outputs/apk/release/app-release-unsigned.apk' -F '_api_key=${{secrets.PGYER_API_KEY}}' https://www.pgyer.com/apiv2/app/upload
+        # continue-on-error: true
+      # - name: Send fir error notify
+      #   id: firErrorMessage
+      #   if: steps.PushToFir.outcome != 'success'
+        # run: |
+        #   node ./send-msg.js "Android 附件同步到蒲公英平台失败。请检查错误重新执行或前往Action直接下载apk文件 \n>[Job RunId](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" "${{ github.event.inputs.buildBranch }}"
+      # - name: Send finally notify
+        # run: |
+        #   node ./send-msg.js "Android 构建成功，并同步到蒲公英平台。\n>[Job Link](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) \n>蒲公英地址:[https://www.pgyer.com/dev-tie-apk](https://www.pgyer.com/dev-tie-apk)" "${{ github.event.inputs.buildBranch }}"
+      # - name: On Failure
+        # if: ${{ failure() }}
+        # run: |
+        #   npm i request
+        #   node ./send-error.js "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" "Android" "${{ github.event.inputs.buildBranch }}"
