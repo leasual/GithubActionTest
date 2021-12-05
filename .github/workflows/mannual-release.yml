@@ -52,8 +52,8 @@ jobs:
         #   echo "::set-output name=id::${{ github.event.head_commit.id }}"
         # trigger by mannual
         run: |
-          commit_message=`git log --format=%B -n 1`
-          commit_id=`git log -1 --format='%H`
+          commit_message="$(git log --format=%B -n 1)"
+          commit_id="$(git log -1 --format='%H)"
           echo "$commit_message"
           echo "$commit_id"
           echo "::set-output name=message::$commit_message"
