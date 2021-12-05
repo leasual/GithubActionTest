@@ -50,6 +50,16 @@ jobs:
           echo "${{ github.event.head_commit.id }}"
           echo "::set-output name=id::${{ github.event.head_commit.id }}"
 
+      - shell: bash
+        if: ${{ steps.lastest_commit.id }} == "7bc94acd9e7fa20dee06f5f217566f07c189e415"
+        run: |
+          "7bc94acd9e7fa20dee06f5f217566f07c189e415" > dev-last-commit.txt
+      - name: Upload init commid id firstly
+        uses: actions/upload-artifact@v2
+        with:
+          name: dev-last-commit
+          path: dev-last-commit.txt
+
       - name: Download last commit id
         id: last_commit
         uses: actions/download-artifact@v2
@@ -60,7 +70,7 @@ jobs:
           last_id="$(cat dev-last-commit.txt)"
           echo "::set-output name=id::$last_id"
           $last_id > dev-last-commit.txt
-
+        
       - name: Upload lastest commid id 
         uses: actions/upload-artifact@v2
         with:
