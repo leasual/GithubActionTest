@@ -31,9 +31,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           disable-autolabeler: true
-          # config-name: release-config.yml
-          # version: ${{ steps.get_version.outputs.TAG }}
-          # tag: ${{ steps.get_version.outputs.TAG }}
+          config-name: release-config.yml
+          version: ${{ steps.get_version.outputs.TAG }}
+          tag: ${{ steps.get_version.outputs.TAG }}
 
       # - name: Publish Release
       #   uses: eregon/publish-release@v1
