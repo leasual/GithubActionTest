@@ -43,20 +43,23 @@ jobs:
       #     ./gradlew lint
 
       - name: Get latest commit id and message
-        id: commit_message
+        id: lastest_commit
         run: |
-          echo "commit_message=${{ github.event.head_commit.message }}" >> $GITHUB_ENV
-          echo "commid_id_lastest=${{ github.event.head_commit.id }}" >> $GITHUB_ENV
+          echo "${{ github.event.head_commit.message }}"
+          echo "::set-output name=message::${{ github.event.head_commit.message }}"
+          echo "${{ github.event.head_commit.id }}"
+          echo "::set-output name=id::${{ github.event.head_commit.id }}"
 
       - name: Download last commit id
+        id: last_commit
         uses: actions/download-artifact@v2
         with:
           name: dev-last-commit
       - shell: bash
         run: |
-          id="$(cat dev-last-commit.txt)"
-          echo "commit_id_last=$id" >> $GITHUB_ENV
-          $commid_id_lastest > dev-last-commit.txt
+          last_id="$(cat dev-last-commit.txt)"
+          echo "::set-output name=id::$last_id"
+          $last_id > dev-last-commit.txt
 
       - name: Upload lastest commid id 
         uses: actions/upload-artifact@v2
@@ -65,7 +68,7 @@ jobs:
           path: dev-last-commit.txt
 
       - name: Generate a changelog
-        if: $commid_id_lastest != $commit_id_last
+        if: ${{ steps.lastest_commit.id }} != ${{ steps.last_commit.id }}
         uses: orhun/git-cliff-action@v1
         with:
           config: cliff.toml
