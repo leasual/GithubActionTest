@@ -85,7 +85,7 @@ jobs:
         uses: orhun/git-cliff-action@v1
         with:
           config: cliff.toml
-          args: $commit_id_last..HEAD
+          args: ${{ steps.lastest_commit.outputs.last_id }}..HEAD
         env:
           OUTPUT: CHANGELOG.md
 
