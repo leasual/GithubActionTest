@@ -34,59 +34,65 @@ jobs:
       #   with:
       #     java-version: '11'
       #     distribution: 'adopt'
-      - name: Get latest commit id and message
+      - name: Get commit id and message
         id: lastest_commit
         run: |
           lastest_commit_message="$(git log -1 --format=%B)"
           lastest_commit_id="$(git log -1 --format=%H)"
           init_commit_id="$(git rev-list --max-parents=0 HEAD)"
+          last_commit_id="$(cat release-last-commit.txt)"
           echo "$lastest_commit_message"
           echo "$lastest_commit_id"
           echo "$init_commit_id"
           echo "::set-output name=message::$lastest_commit_message"
           echo "::set-output name=id::$lastest_commit_id"
           echo "::set-output name=init_id::$init_commit_id"
+          echo "::set-output name=last_id::$last_commit_id"
 
-      - name: Upload first commit id 
-        if: ${{ steps.lastest_commit.outputs.init_id == steps.lastest_commit.outputs.id }}
-        run: |
-          echo "${{ steps.lastest_commit.outputs.init_id }}"
-          echo "${{ steps.lastest_commit.outputs.id }}"
-          expr ${{ steps.lastest_commit.outputs.init_id }} > release-last-commit.txt
-
-      - name: Upload init commid id firstly
-        if: ${{ steps.lastest_commit.outputs.init_id == steps.lastest_commit.outputs.id }}
-        uses: actions/upload-artifact@v2
-        with:
-          name: release-last-commit
-          path: release-last-commit.txt
-
-      - name: Download last commit id
-        id: last_commit
-        uses: actions/download-artifact@v2
-        with:
-          name: release-last-commit
       - shell: bash
         run: |
-          ls -l
-          cat release-last-commit.txt
-          last_id="$(cat release-last-commit.txt)"
-          echo "::set-output name=id::$last_id"
-          expr ${{ steps.lastest_commit.outputs.id }} > release-last-commit.txt
-      - name: Upload lastest commid id 
-        uses: actions/upload-artifact@v2
-        with:
-          name: release-last-commit
-          path: release-last-commit.txt
+          echo "${{ steps.lastest_commit.outputs.lastest_commit_id }}"
+          expr ${{ steps.lastest_commit.outputs.lastest_commit_id }} > release-last-commit.txt
+
+      # - name: Upload init commid id firstly
+      #   if: ${{ steps.lastest_commit.outputs.init_id == steps.lastest_commit.outputs.id }}
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: release-last-commit
+      #     path: release-last-commit.txt
+
+      # - name: Download last commit id
+      #   id: last_commit
+      #   uses: actions/download-artifact@v2
+      #   with:
+      #     name: release-last-commit
+      # - shell: bash
+      #   run: |
+      #     ls -l
+      #     cat release-last-commit.txt
+      #     last_id="$(cat release-last-commit.txt)"
+      #     echo "::set-output name=id::$last_id"
+      #     expr ${{ steps.lastest_commit.outputs.id }} > release-last-commit.txt
+      # - name: Upload lastest commid id 
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: release-last-commit
+      #     path: release-last-commit.txt
 
       - name: Generate a changelog
-        if: ${{ steps.lastest_commit.outputs.id != steps.last_commit.outputs.id }}
+        if: ${{ steps.lastest_commit.outputs.id != steps.lastest_commit.outputs.last_id }}
         uses: orhun/git-cliff-action@v1
         with:
           config: cliff.toml
           args: $commit_id_last..HEAD
         env:
           OUTPUT: CHANGELOG.md
+
+      - uses: EndBug/add-and-commit@v7
+        with:
+          message: build: Build Release Package
+          default_author: github_actions
+          add: 'release-last-commit.txt'
 
       # - name: Grant execute lint 
       #   run: |
