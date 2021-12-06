@@ -41,7 +41,7 @@ jobs:
           lastest_commit_message="$(git log -1 --format=%B)"
           lastest_commit_id="$(git log -1 --format=%H)"
           init_commit_id="$(git rev-list --max-parents=0 HEAD)"
-          last_commit_id="$(cat release-last-commit.txt)"
+          last_commit_id="$(cat .github/release-last-commit.txt)"
           echo "$lastest_commit_message"
           echo "$lastest_commit_id"
           echo "$init_commit_id"
@@ -53,7 +53,7 @@ jobs:
       - shell: bash
         run: |
           echo "${{ steps.lastest_commit.outputs.id }}"
-          expr ${{ steps.lastest_commit.outputs.id }} > release-last-commit.txt
+          expr ${{ steps.lastest_commit.outputs.id }} > .github/release-last-commit.txt
 
       # - name: Upload init commid id firstly
       #   if: ${{ steps.lastest_commit.outputs.init_id == steps.lastest_commit.outputs.id }}
@@ -84,8 +84,8 @@ jobs:
         if: ${{ steps.lastest_commit.outputs.id != steps.lastest_commit.outputs.last_id }}
         uses: orhun/git-cliff-action@v1
         with:
-          config: cliff.toml
-          args: ${{ steps.lastest_commit.outputs.last_id }}..HEAD
+          config: .github/cliff.toml
+          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD
         env:
           OUTPUT: CHANGELOG.md
 
