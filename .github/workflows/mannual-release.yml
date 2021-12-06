@@ -48,14 +48,14 @@ jobs:
           echo "::set-output name=init_id::$init_commit_id"
 
       - name: Upload first commit id 
-        if: ${{ steps.lastest_commit.init_id == steps.lastest_commit.id }}
+        if: ${{ steps.lastest_commit.outputs.init_id == steps.lastest_commit.outputs.id }}
         run: |
-          echo "${{ steps.lastest_commit.init_id }}"
-          echo "${{ steps.lastest_commit.id }}"
-          expr ${{ steps.lastest_commit.init_id }} > release-last-commit.txt
+          echo "${{ steps.lastest_commit.outputs.init_id }}"
+          echo "${{ steps.lastest_commit.outputs.id }}"
+          expr ${{ steps.lastest_commit.outputs.init_id }} > release-last-commit.txt
 
       - name: Upload init commid id firstly
-        if: ${{ steps.lastest_commit.init_id == steps.lastest_commit.id }}
+        if: ${{ steps.lastest_commit.outputs.init_id == steps.lastest_commit.outputs.id }}
         uses: actions/upload-artifact@v2
         with:
           name: release-last-commit
@@ -72,7 +72,7 @@ jobs:
           cat release-last-commit.txt
           last_id="$(cat release-last-commit.txt)"
           echo "::set-output name=id::$last_id"
-          expr ${{ steps.lastest_commit.id }} > release-last-commit.txt
+          expr ${{ steps.lastest_commit.outputs.id }} > release-last-commit.txt
       - name: Upload lastest commid id 
         uses: actions/upload-artifact@v2
         with:
@@ -80,7 +80,7 @@ jobs:
           path: release-last-commit.txt
 
       - name: Generate a changelog
-        if: ${{ steps.lastest_commit.id != steps.last_commit.id }}
+        if: ${{ steps.lastest_commit.outputs.id != steps.last_commit.outputs.id }}
         uses: orhun/git-cliff-action@v1
         with:
           config: cliff.toml
