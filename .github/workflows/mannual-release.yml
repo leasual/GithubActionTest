@@ -85,13 +85,13 @@ jobs:
         uses: orhun/git-cliff-action@v1
         with:
           config: .github/cliff.toml
-          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD
+          args: --verbose --prepend ${{ steps.lastest_commit.outputs.last_id }}..HEAD
         env:
           OUTPUT: CHANGELOG.md
 
       - uses: EndBug/add-and-commit@v7
         with:
-          message: "build: Build Release Package"
+          message: "ci: Build Release Package"
           default_author: github_actions
           add: '.github/release-last-commit.txt CHANGELOG.md'
 
