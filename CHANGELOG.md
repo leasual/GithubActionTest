@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [0.0.1-beta] - 2021-12-06
+## [0.0.2-beta] - 2021-12-06
 
 ### Bug Fixes
 
@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - Config file bugs.
 - 11config file bugs.
 - 22config file bugs.
+- 33config file bugs.
 
 ### Build
 
@@ -20,6 +21,7 @@ All notable changes to this project will be documented in this file.
 
 ### Ci
 
+- Build Release Package
 - Build Release Package
 - Build Release Package
 
