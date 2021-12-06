@@ -50,6 +50,8 @@ jobs:
       - name: Upload first commit id 
         if: ${{ steps.lastest_commit.init_id == steps.lastest_commit.id }}
         run: |
+          echo "${{ steps.lastest_commit.init_id }}"
+          echo "${{ steps.lastest_commit.id }}"
           expr ${{ steps.lastest_commit.init_id }} > release-last-commit.txt
 
       - name: Upload init commid id firstly
