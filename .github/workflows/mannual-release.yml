@@ -37,6 +37,7 @@ jobs:
       - name: Get commit id and message
         id: lastest_commit
         run: |
+          ls -l
           lastest_commit_message="$(git log -1 --format=%B)"
           lastest_commit_id="$(git log -1 --format=%H)"
           init_commit_id="$(git rev-list --max-parents=0 HEAD)"
