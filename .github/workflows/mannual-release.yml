@@ -81,19 +81,27 @@ jobs:
       #     name: release-last-commit
       #     path: release-last-commit.txt
 
+      - name: Backup changelog
+        id: backup_changelog
+        run: |
+          bp_changelog="$(cat CHANGELOG.md)"
+          echo "::set-output name=changelog::$bp_changelog"
+
       - name: Generate a changelog
-        if: ${{ steps.lastest_commit.outputs.id != steps.lastest_commit.outputs.last_id }}
         uses: orhun/git-cliff-action@v1
         with:
           config: .github/cliff.toml
-          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --tag v0.0.7-beta --latest
+          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --tag v0.0.8-beta
         env:
-          PREPEND: CHANGELOG.md
           OUTPUT: CHANGELOG.md
+
+      - name: Append history changelog
+        run: |
+          expr "${{ steps.backup_changelog.outputs.changelog }}" >> CHANGELOG.md
 
       - uses: EndBug/add-and-commit@v7
         with:
-          message: "docs(changelog): update changelog to v0.0.7-beta"
+          message: "docs(changelog): update changelog to v0.0.8-beta"
           default_author: github_actions
           add: '.github/release-last-commit.txt CHANGELOG.md'
 
