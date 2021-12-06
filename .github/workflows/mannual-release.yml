@@ -86,7 +86,7 @@ jobs:
         uses: orhun/git-cliff-action@v1
         with:
           config: .github/cliff.toml
-          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --tag v0.0.5-beta
+          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --unreleased --tag v0.0.5-beta
         env:
           PREPEND: CHANGELOG.md
           OUTPUT: CHANGELOG.md
