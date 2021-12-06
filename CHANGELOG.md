@@ -1,6 +1,52 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.0.5-beta] - 2021-12-06
+
+### Bug Fixes
+
+- Config file error.
+- Configuration file bug.
+- Config file bugs.
+- 11config file bugs.
+- 22config file bugs.
+- 33config file bugs.
+- 44config file bugs.
+- 55config file bugs.
+- 66config file error.
+- 77config file bug.
+
+### Build
+
+- Build Release Package
+- Build Release Package
+- Build Release Package
+- Build Release Package
+
+### Ci
+
+- Build Release Package
+- Build Release Package
+- Build Release Package
+- V0.0.2-beta Build Release Package
+- V0.0.3-beta Build Release Package
+- V0.0.4-beta Build Release Package
+- V0.0.5-beta Build Release Package
+
+### Update
+
+- Configuration file.
+- Configuration file1.
+- Configuration file2.
+- Configuration file3.
+- Configuration file4.
+- Configuration file5.
+- Configuration file6.
+- Configuration file7.
+- Config file.
+- Config file1.
+- Config file2.
+
 ## [0.0.4-beta] - 2021-12-06
 
 ### Bug Fixes
