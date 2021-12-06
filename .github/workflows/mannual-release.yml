@@ -48,11 +48,12 @@ jobs:
           echo "::set-output name=init_id::$init_commit_id"
 
       - name: Upload first commit id 
-        if: ${{ steps.lastest_commit.init_commit_id == steps.lastest_commit.id }}
+        if: ${{ steps.lastest_commit.init_id == steps.lastest_commit.id }}
         run: |
-          expr ${{ steps.lastest_commit.init_commit_id }} > release-last-commit.txt
+          expr ${{ steps.lastest_commit.init_id }} > release-last-commit.txt
+
       - name: Upload init commid id firstly
-        if: ${{ steps.lastest_commit.init_commit_id == steps.lastest_commit.id }}
+        if: ${{ steps.lastest_commit.init_id == steps.lastest_commit.id }}
         uses: actions/upload-artifact@v2
         with:
           name: release-last-commit
