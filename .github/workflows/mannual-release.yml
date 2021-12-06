@@ -52,8 +52,8 @@ jobs:
 
       - shell: bash
         run: |
-          echo "${{ steps.lastest_commit.outputs.lastest_commit_id }}"
-          expr ${{ steps.lastest_commit.outputs.lastest_commit_id }} > release-last-commit.txt
+          echo "${{ steps.lastest_commit.outputs.id }}"
+          expr ${{ steps.lastest_commit.outputs.id }} > release-last-commit.txt
 
       # - name: Upload init commid id firstly
       #   if: ${{ steps.lastest_commit.outputs.init_id == steps.lastest_commit.outputs.id }}
