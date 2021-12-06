@@ -37,19 +37,22 @@ jobs:
       - name: Get latest commit id and message
         id: lastest_commit
         run: |
-          commit_message="$(git log -1 --format=%B)"
-          commit_id="$(git log -1 --format=%H)"
-          echo "$commit_message"
-          echo "$commit_id"
-          echo "::set-output name=message::${{ commit_message }}"
-          echo "::set-output name=id::${{ commit_id }}"
+          lastest_commit_message="$(git log -1 --format=%B)"
+          lastest_commit_id="$(git log -1 --format=%H)"
+          init_commit_id="$(git rev-list --max-parents=0 HEAD)"
+          echo "$lastest_commit_message"
+          echo "$lastest_commit_id"
+          echo "$init_commit_id"
+          echo "::set-output name=message::$lastest_commit_message"
+          echo "::set-output name=id::$lastest_commit_id"
+          echo "::set-output name=init_id::$init_commit_id"
 
-      - shell: bash
-        if: ${{ steps.lastest_commit.id }} == "7bc94acd9e7fa20dee06f5f217566f07c189e415"
+      - name: Upload first commit id 
+        if: ${{ steps.lastest_commit.init_commit_id == steps.lastest_commit.id }}
         run: |
-          expr "7bc94acd9e7fa20dee06f5f217566f07c189e415" > release-last-commit.txt
+          expr ${{ steps.lastest_commit.init_commit_id }} > release-last-commit.txt
       - name: Upload init commid id firstly
-        if: ${{ steps.lastest_commit.id }} == "7bc94acd9e7fa20dee06f5f217566f07c189e415"
+        if: ${{ steps.lastest_commit.init_commit_id == steps.lastest_commit.id }}
         uses: actions/upload-artifact@v2
         with:
           name: release-last-commit
@@ -74,7 +77,7 @@ jobs:
           path: release-last-commit.txt
 
       - name: Generate a changelog
-        if: ${{ steps.lastest_commit.id }} != ${{ steps.last_commit.id }}
+        if: ${{ steps.lastest_commit.id != steps.last_commit.id }}
         uses: orhun/git-cliff-action@v1
         with:
           config: cliff.toml
