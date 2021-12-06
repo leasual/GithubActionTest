@@ -63,7 +63,7 @@ jobs:
       - shell: bash
         run: |
           ls -l
-          last_id=`cat release-last-commit.txt`
+          last_id="$(cat release-last-commit.txt)"
           echo "::set-output name=id::$last_id"
           expr ${{ steps.lastest_commit.id }} > release-last-commit.txt
       - name: Upload lastest commid id 
