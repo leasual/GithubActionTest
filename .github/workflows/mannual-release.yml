@@ -45,6 +45,7 @@ jobs:
           echo "$lastest_commit_message"
           echo "$lastest_commit_id"
           echo "$init_commit_id"
+          echo "$last_commit_id"
           echo "::set-output name=message::$lastest_commit_message"
           echo "::set-output name=id::$lastest_commit_id"
           echo "::set-output name=init_id::$init_commit_id"
@@ -85,13 +86,13 @@ jobs:
         uses: orhun/git-cliff-action@v1
         with:
           config: .github/cliff.toml
-          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --unreleased --tag v0.0.1-beta
+          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --unreleased --tag v0.0.2-beta
         env:
           OUTPUT: CHANGELOG.md
 
       - uses: EndBug/add-and-commit@v7
         with:
-          message: "ci: Build Release Package"
+          message: "ci: v0.0.2-beta Build Release Package"
           default_author: github_actions
           add: '.github/release-last-commit.txt CHANGELOG.md'
 
