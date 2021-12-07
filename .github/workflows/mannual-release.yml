@@ -1,148 +1,81 @@
-name: Android Build
+name: Android Release Build
 on:
   workflow_dispatch:
     inputs:
-      buildBranch:
-        description: 'Input which branch to build (develop/main/hotfix)'
-        required: true
-        default: 'main'
+      # buildBranch:
+      #   description: 'Input which branch to build (develop/main/hotfix)'
+      #   required: true
+      #   default: 'main'
       buildVersionOrTag:
         description: 'Specify version only when you want to increment the minor and major version (e.g. 1.0.0)'
-        required: false
+        required: true
         default: '1.0.0'
-      uploadArtifact:
-        description: 'Upload apk to Github Artifact (true/false)'
-        required: false
-        default: 'false'
+      # uploadArtifact:
+      #   description: 'Upload apk to Github Artifact (true/false)'
+      #   required: false
+      #   default: 'false'
       uploadCloud:
         description: 'Upload apk to Pgyer (true/false)'
         required: true
         default: 'true'
 
-# env:
-  # GITLAB_REPO_URL: ${{ secrets.GITLAB_REPO_URL }}
-  # WECOM_WEBHOOK_KEY: ${{ secrets.WECOM_WEBHOOK_KEY }}
-  # MENTION_MOBILE_LIST: ${{ secrets.MENTION_MOBILE_LIST }}
-
 jobs:
-  build-android-test:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.buildBranch == 'main' }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0 # Required due to the weg Git works, without it this action won't be able to find any or the correct tags
-          ref: ${{ github.event.inputs.buildBranch }}
-      # - name: set up JDK 11
-      #   uses: actions/setup-java@v2
-      #   with:
-      #     java-version: '11'
-      #     distribution: 'adopt'
-      - name: Get commit id and message
-        id: lastest_commit
-        run: |
-          ls -l
-          echo "name=${{ github.event.repository.name }}"
-          echo "name=${{ github.event.repository.full_name }}"
-          lastest_commit_message="$(git log -1 --format=%B)"
-          lastest_commit_id="$(git log -1 --format=%H)"
-          init_commit_id="$(git rev-list --max-parents=0 HEAD)"
-          last_commit_id="$(cat .github/release-last-commit.txt)"
-          echo "::set-output name=message::$lastest_commit_message"
-          echo "::set-output name=id::$lastest_commit_id"
-          echo "::set-output name=init_id::$init_commit_id"
-          echo "::set-output name=last_id::$last_commit_id"
-
-      - shell: bash
-        run: |
-          echo "${{ steps.lastest_commit.outputs.id }}"
-          expr ${{ steps.lastest_commit.outputs.id }} > .github/release-last-commit.txt
-
-      - name: Backup changelog
-        if: hashFiles('CHANGELOG_DEV.md') != ''
-        run: |
-          mv CHANGELOG_DEV.md CHANGELOG_backup.md
-
-      - name: Generate a changelog without header and footer
-        if: hashFiles('CHANGELOG_backup.md') != ''
-        uses: orhun/git-cliff-action@v1
-        with:
-          config: .github/cliff.toml
-          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --tag ${{ github.event.inputs.buildVersionOrTag }}-beta --strip header
-        env:
-          OUTPUT: CHANGELOG_commit.md
-
-      - name: Append history changelog
-        if: hashFiles('CHANGELOG_backup.md') != ''
-        run: |
-          sed '3r CHANGELOG_commit.md' CHANGELOG_backup.md > CHANGELOG_lastest.md
-          rm CHANGELOG_backup.md CHANGELOG_commit.md
-          mv CHANGELOG_lastest.md CHANGELOG_DEV.md
-          echo "$(cat CHANGELOG_DEV.md)"
-      
-      - name: Generate a changelog with header and footer
-        if: hashFiles('CHANGELOG_DEV.md') == ''
-        uses: orhun/git-cliff-action@v1
-        with:
-          config: .github/cliff.toml
-          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --tag ${{ github.event.inputs.buildVersionOrTag }}-beta
-        env:
-          OUTPUT: CHANGELOG_DEV.md 
-
-      - uses: EndBug/add-and-commit@v7
-        with:
-          message: "ci: update changelog to ${{ github.event.inputs.buildVersionOrTag }}-beta"
-          default_author: github_actions
-          add: '.github/release-last-commit.txt CHANGELOG_DEV.md'
-
-      # - name: Grant execute lint 
-      #   run: |
-      #     chmod +x gradlew
-
-      # - name: Check lint with Gradle
-      #   run: |
-      #     ./gradlew lint
-      
-
-      # - name: Upload Artifact
-      #   if: ${{ github.event.inputs.uploadArtifact == 'true' }}
-      #   uses: actions/upload-artifact@v1
-      #   with:
-      #     name: app-release.apk
-      #     path: android/app/build/outputs/apk/release/
-      # - name: Upload Artifact Success
-        # if: ${{ github.event.inputs.uploadArtifact == 'true' }}
-        # run: |
-        #   npm i request
-        #   node ./send-success.js "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" "${{ github.event.inputs.uploadCloud }}"  "Android"  "${{ github.event.inputs.buildBranch }}"
-      # - name: Push to Fir
-        # id: PushToFir
-        # run: |
-        #   curl -F 'file=@${{ github.workspace }}/app/build/outputs/apk/release/app-release-unsigned.apk' -F '_api_key=${{secrets.PGYER_API_KEY}}' https://www.pgyer.com/apiv2/app/upload
-        # continue-on-error: true
-      # - name: Send fir error notify
-      #   id: firErrorMessage
-      #   if: steps.PushToFir.outcome != 'success'
-        # run: |
-        #   node ./send-msg.js "Android 附件同步到蒲公英平台失败。请检查错误重新执行或前往Action直接下载apk文件 \n>[Job RunId](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" "${{ github.event.inputs.buildBranch }}"
-      # - name: Send finally notify
-        # run: |
-        #   node ./send-msg.js "Android 构建成功，并同步到蒲公英平台。\n>[Job Link](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) \n>蒲公英地址:[https://www.pgyer.com/dev-tie-apk](https://www.pgyer.com/dev-tie-apk)" "${{ github.event.inputs.buildBranch }}"
-      # - name: On Failure
-        # if: ${{ failure() }}
-        # run: |
-        #   npm i request
-        #   node ./send-error.js "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" "Android" "${{ github.event.inputs.buildBranch }}"
-
   build-android-release:
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.buildBranch != 'main' }}
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+      
+      - name: Build number offset
+        id: versionCode
+        env:
+          NUM: ${{ github.run_number }}
+        run: |
+          echo "::set-output name=code::$(($NUM + 10000))"
+          echo "::set-output name=date::$(date +'%Y-%m-%dT%H:%M')"
+
+      - name: Check lint with gradle
+        run: |
+          chmod +x gradlew & ./gradlew lint
+
+      - name: Update gradle version for Android
+        uses: damienaicheh/update-android-version-gradle-action@v1.0.0
+        with:
+          build-gradle-path: '${{ github.workspace }}/app/build.gradle'
+          version-code: ${{ steps.versionCode.outputs.code }}
+          version-name: ${{ github.event.inputs.buildVersionOrTag }}
+          print-file: true
+
+      - name: Build with gradle
+        run: |
+          ./gradlew assembleRelease
+
+      - name: Push to pgyer
+        id: pushToPgyer
+        run: |
+          curl -F 'file=@${{ github.workspace }}/app/build/outputs/apk/release/app-release-unsigned.apk' -F '_api_key=${{secrets.PGYER_API_KEY}}' https://www.pgyer.com/apiv2/app/upload
+        continue-on-error: true
+
+      - name: On sucess to send notification
+        if: success()
+        uses: slackapi/slack-github-action@v1.16.0
+        with:
+          payload: "{\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"${{ github.event.repository.name }} build success: \"}},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Type:* Android Version:${{ github.event.inputs.buildVersionOrTag }}(${{ steps.versionCode.outputs.code }})\"},{\"type\":\"mrkdwn\",\"text\":\"*When:* ${{ steps.versionCode.outputs.date }} \"}]}]}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: On failure to send notification
+        if: failure()
+        uses: slackapi/slack-github-action@v1.16.0
+        with:
+          payload: "{\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"${{ github.event.repository.name }} build failure: \"}},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Type:* Android Version:${{ github.event.inputs.buildVersionOrTag }}(${{ steps.versionCode.outputs.code }})\"},{\"type\":\"mrkdwn\",\"text\":\"*When:* ${{ steps.versionCode.outputs.date }} \"}]}]}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
 
       - name: Create tag version
         id: tag
