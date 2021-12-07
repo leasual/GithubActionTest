@@ -1,6 +1,9 @@
-
-
 ### Bug Fixes
+
+### Documentation
+
+- Update changelog to 1.0.0-beta
+
 
 - Develop branch changelog.
 - 126develop branch changelog.
