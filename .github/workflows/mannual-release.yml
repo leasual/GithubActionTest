@@ -73,7 +73,7 @@ jobs:
         uses: orhun/git-cliff-action@v1
         with:
           config: .github/cliff.toml
-          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --tag ${{ github.event.inputs.buildVersionOrTag }}-beta --strip all
+          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --tag ${{ github.event.inputs.buildVersionOrTag }}-beta --strip header
         env:
           OUTPUT: CHANGELOG_commit.md
 
@@ -83,6 +83,7 @@ jobs:
           sed '3r CHANGELOG_commit.md' CHANGELOG_backup.md > CHANGELOG_lastest.md
           rm CHANGELOG_backup.md CHANGELOG_commit.md
           mv CHANGELOG_lastest.md CHANGELOG_DEV.md
+          echo "$(cat CHANGELOG_DEV.md)"
       
       - name: Generate a changelog with header and footer
         if: hashFiles('CHANGELOG_DEV.md') == ''
