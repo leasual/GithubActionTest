@@ -44,7 +44,7 @@ jobs:
           echo "::set-output name=branch::${GITHUB_REF##*/}"
       - name: Check lint with gradle
         run: |
-          chmod +x gradlew & ./gradlew lint11
+          chmod +x gradlew & ./gradlew lint
 
       - name: Update gradle version for Android
         uses: damienaicheh/update-android-version-gradle-action@v1.0.0
