@@ -47,6 +47,8 @@ jobs:
         id: lastest_commit
         run: |
           ls -l
+          echo "name=${{ github.event.repository.name }}"
+          echo "name=${{ github.event.repository.full_name }}"
           lastest_commit_message="$(git log -1 --format=%B)"
           lastest_commit_id="$(git log -1 --format=%H)"
           init_commit_id="$(git rev-list --max-parents=0 HEAD)"
@@ -101,7 +103,7 @@ jobs:
         run: |
           URL=${URL//\//\\\/}
           sed -i -E 's/<!-- [0-9]+ -->//g; s/\(#([0-9]+)\)/([#\1]('"$URL"'\/pull\/\1))/g; s/`([a-zA-Z0-9]+)`/[`\1`]('"$URL"'\/commit\/\1)/g' CHANGELOG*.md
-          sed -i '/^## .*$/d; 1d; 2d' CHANGELOG_latest.md
+          sed -i '/^## .*$/d; 1d; 2d' CHANGELOG_DEV.md
 
       - uses: EndBug/add-and-commit@v7
         with:
