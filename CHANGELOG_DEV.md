@@ -1,6 +1,39 @@
+### Documentation
+
 ### Bug Fixes
 
+- 3434 config bug.(#GECI-145)
+
+
+### Bug Fixes
+
+- Config commit info.(#GECI-178)
+- 3434 config bug.(#GECI-144)
+
 ### Documentation
+
+- Update changelog to 1.0.1
+
+
+### Bug Fixes
+
+- Config commit info.(#GECI-176)
+
+### Documentation
+
+- Update changelog to 1.0.1
+
+
+### Bug Fixes
+
+- 128develop branch changelog.(#GECI-232)
+- 128develop branch changelog.(#GECI-234)
+
+### Documentation
+
+- Update changelog to 1.0.0-beta
+- Update changelog to 1.0.0-beta
+
 
 - Update changelog to 1.0.0-beta
 
