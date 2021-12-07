@@ -1,4 +1,4 @@
-name: Build Android Release
+name: Android Build
 on:
   workflow_dispatch:
     inputs:
@@ -147,7 +147,7 @@ jobs:
         # run: |
         #   npm i request
         #   node ./send-error.js "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" "Android" "${{ github.event.inputs.buildBranch }}"
-jobs:
+
   build-android-release:
     runs-on: ubuntu-latest
     if: github.event.repository.name == 'main'
