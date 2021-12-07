@@ -2,6 +2,11 @@
 
 ### Bug Fixes
 
+- Config commit info.(#GECI-176)
+
+
+### Bug Fixes
+
 - Config file error.
 - Configuration file bug.
 - Config file bugs.
@@ -37,6 +42,7 @@
 - Update changelog to v0.0.8-beta
 - Update changelog to v0.0.9-beta
 - Update changelog to v0.0.11-beta
+- Update changelog to 1.0.0-beta
 - Update changelog to 1.0.0-beta
 - Update changelog to 1.0.0-beta
 
