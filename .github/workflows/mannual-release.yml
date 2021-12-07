@@ -29,13 +29,16 @@ jobs:
         with:
           fetch-depth: 0
       
-      - name: Build number offset
-        id: versionCode
+      - name: Prepear variable for build
+        id: variable
         env:
           NUM: ${{ github.run_number }}
         run: |
           echo "::set-output name=code::$(($NUM + 10000))"
           echo "::set-output name=date::$(date +'%Y-%m-%dT%H:%M')"
+          if [ -f CHANGELOG.md]
+            touch CHANGELOG.md
+          fi
 
       - name: Check lint with gradle
         run: |
@@ -45,7 +48,7 @@ jobs:
         uses: damienaicheh/update-android-version-gradle-action@v1.0.0
         with:
           build-gradle-path: '${{ github.workspace }}/app/build.gradle'
-          version-code: ${{ steps.versionCode.outputs.code }}
+          version-code: ${{ steps.variable.outputs.code }}
           version-name: ${{ github.event.inputs.buildVersionOrTag }}
           print-file: true
 
@@ -63,7 +66,7 @@ jobs:
         if: success()
         uses: slackapi/slack-github-action@v1.16.0
         with:
-          payload: "{\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"${{ github.event.repository.name }} build success: \"}},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Type:* Android Version:${{ github.event.inputs.buildVersionOrTag }}(${{ steps.versionCode.outputs.code }})\"},{\"type\":\"mrkdwn\",\"text\":\"*When:* ${{ steps.versionCode.outputs.date }} \"}]}]}"
+          payload: "{\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"${{ github.event.repository.name }} build success: \"}},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Type:* Android Version:${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"},{\"type\":\"mrkdwn\",\"text\":\"*When:* ${{ steps.variable.outputs.date }} \"}]}]}"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
@@ -72,7 +75,7 @@ jobs:
         if: failure()
         uses: slackapi/slack-github-action@v1.16.0
         with:
-          payload: "{\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"${{ github.event.repository.name }} build failure: \"}},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Type:* Android Version:${{ github.event.inputs.buildVersionOrTag }}(${{ steps.versionCode.outputs.code }})\"},{\"type\":\"mrkdwn\",\"text\":\"*When:* ${{ steps.versionCode.outputs.date }} \"}]}]}"
+          payload: "{\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"${{ github.event.repository.name }} build failure: \"}},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Type:* Android Version:${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"},{\"type\":\"mrkdwn\",\"text\":\"*When:* ${{ steps.variable.outputs.date }} \"}]}]}"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
