@@ -36,7 +36,7 @@ jobs:
         run: |
           echo "::set-output name=code::$(($NUM + 10000))"
           echo "::set-output name=date::$(date +'%Y-%m-%dT%H:%M')"
-          if [ ! -f CHANGELOG.md];then
+          if [ ! -f CHANGELOG.md ];then
             touch CHANGELOG.md
           fi
 
