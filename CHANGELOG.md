@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.0.11-beta] - 2021-12-07
+
+### Bug Fixes
+
+- 125update changelog config.
+
+### Documentation
+
+- Update changelog to v0.0.9-beta
+
 ## [0.0.8-beta] - 2021-12-07
 
 ### Bug Fixes
