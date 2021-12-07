@@ -82,12 +82,12 @@ jobs:
       #     path: release-last-commit.txt
 
       - name: Backup changelog
-        if: [ -f CHANGELOG.md ]
+        if: hashFiles('CHANGELOG.md') != ''
         run: |
           mv CHANGELOG.md BACK_CHANGELOG.md
 
       - name: Generate a changelog
-        if: [ -f CHANGELOG.md ]
+        if: hashFiles('CHANGELOG.md') != ''
         uses: orhun/git-cliff-action@v1
         with:
           config: .github/cliff.toml
@@ -96,7 +96,7 @@ jobs:
           OUTPUT: CHANGELOG.md
 
       - name: Append history changelog
-        if: [ -f CHANGELOG.md ]
+        if: hashFiles('CHANGELOG.md') != ''
         run: |
           sed '3r CHANGELOG.md' BACK_CHANGELOG.md > CHANGELOG_LASTEST.md
           rm BACK_CHANGELOG.md CHANGELOG.md
