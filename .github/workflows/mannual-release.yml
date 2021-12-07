@@ -56,38 +56,13 @@ jobs:
           echo "${{ steps.lastest_commit.outputs.id }}"
           expr ${{ steps.lastest_commit.outputs.id }} > .github/release-last-commit.txt
 
-      # - name: Upload init commid id firstly
-      #   if: ${{ steps.lastest_commit.outputs.init_id == steps.lastest_commit.outputs.id }}
-      #   uses: actions/upload-artifact@v2
-      #   with:
-      #     name: release-last-commit
-      #     path: release-last-commit.txt
-
-      # - name: Download last commit id
-      #   id: last_commit
-      #   uses: actions/download-artifact@v2
-      #   with:
-      #     name: release-last-commit
-      # - shell: bash
-      #   run: |
-      #     ls -l
-      #     cat release-last-commit.txt
-      #     last_id="$(cat release-last-commit.txt)"
-      #     echo "::set-output name=id::$last_id"
-      #     expr ${{ steps.lastest_commit.outputs.id }} > release-last-commit.txt
-      # - name: Upload lastest commid id 
-      #   uses: actions/upload-artifact@v2
-      #   with:
-      #     name: release-last-commit
-      #     path: release-last-commit.txt
-
       - name: Backup changelog
         if: hashFiles('CHANGELOG.md') != ''
         run: |
-          mv CHANGELOG.md BACK_CHANGELOG.md
+          mv CHANGELOG.md CHANGELOG_backup.md
 
-      - name: Generate a changelog
-        if: hashFiles('CHANGELOG.md') != ''
+      - name: Generate a changelog without header and footer
+        if: hashFiles('CHANGELOG_backup.md') != ''
         uses: orhun/git-cliff-action@v1
         with:
           config: .github/cliff.toml
@@ -96,11 +71,20 @@ jobs:
           OUTPUT: CHANGELOG.md
 
       - name: Append history changelog
-        if: hashFiles('CHANGELOG.md') != ''
+        if: hashFiles('CHANGELOG_backup.md') != ''
         run: |
-          sed '3r CHANGELOG.md' BACK_CHANGELOG.md > CHANGELOG_LASTEST.md
-          rm BACK_CHANGELOG.md CHANGELOG.md
-          mv CHANGELOG_LASTEST.md CHANGELOG.md
+          sed '3r CHANGELOG.md' CHANGELOG_backup.md > CHANGELOG_lastest.md
+          rm CHANGELOG_backup.md CHANGELOG.md
+          mv CHANGELOG_lastest.md CHANGELOG.md
+      
+      - name: Generate a changelog with header and footer
+        if: hashFiles('CHANGELOG_backup.md') == ''
+        uses: orhun/git-cliff-action@v1
+        with:
+          config: .github/cliff.toml
+          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --tag v0.0.8-beta
+        env:
+          OUTPUT: CHANGELOG.md 
 
       - uses: EndBug/add-and-commit@v7
         with:
