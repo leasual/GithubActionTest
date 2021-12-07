@@ -2,10 +2,10 @@ name: Android Build
 on:
   workflow_dispatch:
     inputs:
-      # buildBranch:
-      #   description: '输入构建分支(develop/main/fix)'
-      #   required: true
-      #   default: 'develop'
+      buildBranch:
+        description: 'Input which branch to build (develop/main/hotfix)'
+        required: true
+        default: 'develop'
       buildVersion:
         description: 'Input build version (e.g. 1.0.0)'
         required: true
@@ -31,13 +31,13 @@ on:
 jobs:
   build-android-test:
     runs-on: ubuntu-latest
-    if: github.event.repository.name != 'main'
+    if: ${{ github.event.inputs.buildBranch != 'main' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
         with:
           fetch-depth: 0 # Required due to the weg Git works, without it this action won't be able to find any or the correct tags
-          # ref: ${{ github.event.inputs.buildBranch }}
+          ref: ${{ github.event.inputs.buildBranch }}
       # - name: set up JDK 11
       #   uses: actions/setup-java@v2
       #   with:
@@ -79,13 +79,13 @@ jobs:
           config: .github/cliff.toml
           args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --tag ${{ github.event.inputs.buildVersion }}-beta --strip all
         env:
-          OUTPUT: CHANGELOG.md
+          OUTPUT: CHANGELOG_commit.md
 
       - name: Append history changelog
         if: hashFiles('CHANGELOG_backup.md') != ''
         run: |
-          sed '3r CHANGELOG.md' CHANGELOG_backup.md > CHANGELOG_lastest.md
-          rm CHANGELOG_backup.md CHANGELOG.md
+          sed '3r CHANGELOG_commit.md' CHANGELOG_backup.md > CHANGELOG_lastest.md
+          rm CHANGELOG_backup.md CHANGELOG_commit.md
           mv CHANGELOG_lastest.md CHANGELOG_DEV.md
       
       - name: Generate a changelog with header and footer
@@ -152,7 +152,7 @@ jobs:
 
   build-android-release:
     runs-on: ubuntu-latest
-    if: github.event.repository.name == 'main'
+    if: ${{ github.event.inputs.buildBranch == 'main' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
