@@ -90,59 +90,7 @@ jobs:
         if: success()
         uses: slackapi/slack-github-action@v1.16.0
         with:
-          payload: "{\n" +
-                "    \"username\": \"Github Bot\",\n" +
-                "    \"blocks\":[\n" +
-                "        {\n" +
-                "            \"type\":\"section\",\n" +
-                "            \"text\":{\n" +
-                "                \"type\":\"mrkdwn\",\n" +
-                "                \"text\":\"*Project:* ${{ github.event.repository.name }}\"\n" +
-                "            }\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"type\":\"section\",\n" +
-                "            \"text\":{\n" +
-                "                \"type\":\"mrkdwn\",\n" +
-                "                \"text\":\"*Branch:* ${GITHUB_REF##*/}\"\n" +
-                "            }\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"type\":\"section\",\n" +
-                "            \"text\":{\n" +
-                "                \"type\":\"mrkdwn\",\n" +
-                "                \"text\":\"*Build Status:* Success\"\n" +
-                "            }\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"type\":\"section\",\n" +
-                "            \"text\":{\n" +
-                "                \"type\":\"mrkdwn\",\n" +
-                "                \"text\":\"*Platform:* Android\"\n" +
-                "            }\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"type\":\"mrkdwn\",\n" +
-                "            \"text\":\"*Version:* ${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"type\":\"mrkdwn\",\n" +
-                "            \"text\":\"*Version:* ${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"type\":\"mrkdwn\",\n" +
-                "            \"text\":\"*Changelog:* ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/blob/${GITHUB_REF##*/}/CHANGELOG.md\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"type\":\"mrkdwn\",\n" +
-                "            \"text\":\"*Download Url:* https://www.pgyer.com/uoud\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"type\":\"mrkdwn\",\n" +
-                "            \"text\":\"*When:* ${{ steps.variable.outputs.date }}\"\n" +
-                "        }\n" +
-                "    ]\n" +
-                "}"
+          payload: "{\"username\": \"Github Bot\",\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Project:* ${{ github.event.repository.name }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Branch:* ${GITHUB_REF##*/}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Build Status:* Success\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Platform:* Android\"}},{\"type\":\"mrkdwn\",\"text\":\"*Version:* ${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"},{\"type\":\"mrkdwn\",\"text\":\"*Version:* ${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"},{\"type\":\"mrkdwn\",\"text\":\"*Changelog:* ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/blob/${GITHUB_REF##*/}/CHANGELOG.md\"},{\"type\":\"mrkdwn\",\"text\":\"*Download Url:* https://www.pgyer.com/uoud\"},{\"type\":\"mrkdwn\",\"text\":\"*When:* ${{ steps.variable.outputs.date }}\"}]}"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
@@ -151,51 +99,7 @@ jobs:
         if: failure()
         uses: slackapi/slack-github-action@v1.16.0
         with:
-          payload: "{\n" +
-                "    \"username\": \"Github Bot\",\n" +
-                "    \"blocks\":[\n" +
-                "        {\n" +
-                "            \"type\":\"section\",\n" +
-                "            \"text\":{\n" +
-                "                \"type\":\"mrkdwn\",\n" +
-                "                \"text\":\"*Project:* ${{ github.event.repository.name }}\"\n" +
-                "            }\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"type\":\"section\",\n" +
-                "            \"text\":{\n" +
-                "                \"type\":\"mrkdwn\",\n" +
-                "                \"text\":\"*Branch:* ${GITHUB_REF##*/}\"\n" +
-                "            }\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"type\":\"section\",\n" +
-                "            \"text\":{\n" +
-                "                \"type\":\"mrkdwn\",\n" +
-                "                \"text\":\"*Build Status:* Failure\"\n" +
-                "            }\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"type\":\"section\",\n" +
-                "            \"text\":{\n" +
-                "                \"type\":\"mrkdwn\",\n" +
-                "                \"text\":\"*Platform:* Android\"\n" +
-                "            }\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"type\":\"mrkdwn\",\n" +
-                "            \"text\":\"*Version:* ${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"type\":\"mrkdwn\",\n" +
-                "            \"text\":\"*Version:* ${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"type\":\"mrkdwn\",\n" +
-                "            \"text\":\"*When:* ${{ steps.variable.outputs.date }}\"\n" +
-                "        }\n" +
-                "    ]\n" +
-                "}"
+          payload: "{\"username\": \"Github Bot\",\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Project:* ${{ github.event.repository.name }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Branch:* ${GITHUB_REF##*/}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Build Status:* Failure\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Platform:* Android\"}},{\"type\":\"mrkdwn\",\"text\":\"*Version:* ${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"},{\"type\":\"mrkdwn\",\"text\":\"*Version:* ${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"},{\"type\":\"mrkdwn\",\"text\":\"*When:* ${{ steps.variable.outputs.date }}\"}]}"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
