@@ -1,6 +1,41 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.1.5] - 2021-12-07
+
+### Bug Fixes
+
+- 3434 config bug.(#GECI-145)
+- Config file.
+- Update config file.
+- Update changelog file.
+- Changelog bug.
+- Release changelog file.
+- Release changelog bug.
+- Release build configuration.
+- Release build configuration.
+- Release configuration file error.
+- Release build configuration error.
+- Release build configuration bug.
+- Release build configuration bug11.
+- Tag error.
+
+### Documentation
+
+- Update changelog to 1.0.3-beta
+- Update changelog to 1.0.4-beta
+- Update changelog to 1.0.5-beta
+- Update changelog to 1.0.6-beta
+
+### Features
+
+- Add release changelog file.
+- Slack message.
+- Release custom slack message.
+- Release custom slack message11.
+- Release custom slack message22.
+- Release custom slack message33.
+
 ## [--prepend] - 2021-12-07
 
 ### Bug Fixes
