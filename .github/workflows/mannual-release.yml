@@ -66,7 +66,7 @@ jobs:
         uses: orhun/git-cliff-action@v1
         with:
           config: .github/cliff.toml
-          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --tag v0.0.9-beta --strip all
+          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --tag v0.0.11-beta --strip all
         env:
           OUTPUT: CHANGELOG.md
 
@@ -78,7 +78,7 @@ jobs:
           mv CHANGELOG_lastest.md CHANGELOG.md
       
       - name: Generate a changelog with header and footer
-        if: hashFiles('CHANGELOG_backup.md') == ''
+        if: hashFiles('CHANGELOG.md') == ''
         uses: orhun/git-cliff-action@v1
         with:
           config: .github/cliff.toml
@@ -88,7 +88,7 @@ jobs:
 
       - uses: EndBug/add-and-commit@v7
         with:
-          message: "docs(changelog): update changelog to v0.0.9-beta"
+          message: "docs(changelog): update changelog to v0.0.11-beta"
           default_author: github_actions
           add: '.github/release-last-commit.txt CHANGELOG.md'
 
