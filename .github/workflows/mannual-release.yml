@@ -164,4 +164,4 @@ jobs:
         with:
           message: "ci: update changelog to ${{ github.event.inputs.buildVersionOrTag }}-beta"
           default_author: github_actions
-          add: '.github/release-last-commit.txt CHANGELOG.md
+          add: '.github/release-last-commit.txt CHANGELOG.md'
