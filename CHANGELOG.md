@@ -5,7 +5,8 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Update changelog config.
+- 123update changelog config.
+- 124update changelog config.
 
 ### Documentation
 
