@@ -82,22 +82,25 @@ jobs:
       #     path: release-last-commit.txt
 
       - name: Backup changelog
-        id: backup_changelog
+        if: [ -f CHANGELOG.md ]
         run: |
-          bp_changelog="$(cat CHANGELOG.md)"
-          echo "::set-output name=changelog::$bp_changelog"
+          mv CHANGELOG.md BACK_CHANGELOG.md
 
       - name: Generate a changelog
+        if: [ -f CHANGELOG.md ]
         uses: orhun/git-cliff-action@v1
         with:
           config: .github/cliff.toml
-          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --tag v0.0.8-beta
+          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --tag v0.0.8-beta --trip all
         env:
           OUTPUT: CHANGELOG.md
 
       - name: Append history changelog
+        if: [ -f CHANGELOG.md ]
         run: |
-          expr "${{ steps.backup_changelog.outputs.changelog }}" >> CHANGELOG.md
+          sed '3r CHANGELOG.md' BACK_CHANGELOG.md > CHANGELOG_LASTEST.md
+          rm BACK_CHANGELOG.md CHANGELOG.md
+          mv CHANGELOG_LASTEST.md CHANGELOG.md
 
       - uses: EndBug/add-and-commit@v7
         with:
