@@ -1,0 +1,139 @@
+name: Android Test Build
+on:
+  workflow_dispatch:
+    inputs:
+      buildBranch:
+        description: 'Input which branch to build (develop/main/hotfix)'
+        required: true
+        default: 'develop'
+      buildVersionOrTag:
+        description: 'Specify version only when you want to increment the minor and major version (e.g. 1.0.0)'
+        required: true
+        default: '1.0.0'
+      # uploadArtifact:
+      #   description: 'Upload apk to Github Artifact (true/false)'
+      #   required: false
+      #   default: 'false'
+      uploadCloud:
+        description: 'Upload apk to Pgyer (true/false)'
+        required: true
+        default: 'true'
+
+jobs:
+  build-android-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.buildBranch }}
+      
+      - name: Prepear variable for build
+        id: variable
+        env:
+          NUM: ${{ github.run_number }}
+        run: |
+          echo "::set-output name=code::$(($NUM + 10000))"
+          echo "::set-output name=date::$(date +'%Y-%m-%dT%H:%M')"
+          if [ ! -f CHANGELOG_DEV.md ];then
+            touch CHANGELOG_DEV.md
+          fi
+          url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/blob/${GITHUB_REF##*/}/CHANGELOG_DEV.md"
+          echo "::set-output name=changelog_url::$url"
+          echo "::set-output name=branch::${GITHUB_REF##*/}"
+      - name: Check lint with gradle
+        run: |
+          chmod +x gradlew & ./gradlew lint
+
+      - name: Update gradle version for Android
+        uses: damienaicheh/update-android-version-gradle-action@v1.0.0
+        with:
+          build-gradle-path: '${{ github.workspace }}/app/build.gradle'
+          version-code: ${{ steps.variable.outputs.code }}
+          version-name: ${{ github.event.inputs.buildVersionOrTag }}
+          print-file: true
+
+      - name: Build with gradle
+        run: |
+          ./gradlew assembleRelease
+
+      - name: Push to pgyer
+        id: pushToPgyer
+        run: |
+          curl -F 'file=@${{ github.workspace }}/app/build/outputs/apk/release/app-release-unsigned.apk' -F '_api_key=${{secrets.PGYER_API_KEY}}' https://www.pgyer.com/apiv2/app/upload
+        continue-on-error: true
+
+      - name: Get commit id and message
+        id: lastest_commit
+        run: |
+          ls -l
+          echo "name=${{ github.event.repository.name }}"
+          echo "name=${{ github.event.repository.full_name }}"
+          lastest_commit_message="$(git log -1 --format=%B)"
+          lastest_commit_id="$(git log -1 --format=%H)"
+          init_commit_id="$(git rev-list --max-parents=0 HEAD)"
+          last_commit_id="$(cat release-last-commit.txt)"
+          echo "::set-output name=message::$lastest_commit_message"
+          echo "::set-output name=id::$lastest_commit_id"
+          echo "::set-output name=init_id::$init_commit_id"
+          echo "::set-output name=last_id::$last_commit_id"
+      - shell: bash
+        run: |
+          echo "${{ steps.lastest_commit.outputs.id }}"
+          expr ${{ steps.lastest_commit.outputs.id }} > release-last-commit.txt
+      - name: Backup changelog
+        if: hashFiles('CHANGELOG_DEV.md') != ''
+        run: |
+          mv CHANGELOG_DEV.md CHANGELOG_backup.md
+      - name: Generate a changelog without header and footer
+        if: hashFiles('CHANGELOG_backup.md') != ''
+        uses: orhun/git-cliff-action@v1
+        with:
+          config: .github/cliff.toml
+          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --tag ${{ github.event.inputs.buildVersionOrTag }}-beta --strip header
+        env:
+          OUTPUT: CHANGELOG_commit.md
+
+      - name: Append history changelog
+        if: hashFiles('CHANGELOG_backup.md') != ''
+        run: |
+          sed '3r CHANGELOG_commit.md' CHANGELOG_backup.md > CHANGELOG_lastest.md
+          rm CHANGELOG_backup.md CHANGELOG_commit.md
+          mv CHANGELOG_lastest.md CHANGELOG_DEV.md
+          echo "$(cat CHANGELOG_DEV.md)"
+      
+      - name: Generate a changelog with header and footer
+        if: hashFiles('CHANGELOG_DEV.md') == ''
+        uses: orhun/git-cliff-action@v1
+        with:
+          config: .github/cliff.toml
+          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --tag ${{ github.event.inputs.buildVersionOrTag }}-beta
+        env:
+          OUTPUT: CHANGELOG_DEV.md 
+
+      - uses: EndBug/add-and-commit@v7
+        with:
+          message: "ci: update changelog to ${{ github.event.inputs.buildVersionOrTag }}"
+          default_author: github_actions
+          add: 'release-last-commit.txt CHANGELOG_DEV.md'
+          tag: '${{ github.event.inputs.buildVersionOrTag }} --force'
+
+      - name: On sucess to send notification
+        if: success()
+        uses: slackapi/slack-github-action@v1.16.0
+        with:
+          payload: "{\"username\": \"Github Bot\",\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Project:* ${{ github.event.repository.name }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Branch:* ${{ steps.variable.outputs.branch }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Build Status:* Success\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Platform:* Android\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Version:* ${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Changelog Url:* ${{ steps.variable.outputs.changelog_url }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Download Url:* https://www.pgyer.com/uoud\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*When:* ${{ steps.variable.outputs.date }}\"}}]}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: On failure to send notification
+        if: failure()
+        uses: slackapi/slack-github-action@v1.16.0
+        with:
+          payload: "{\"username\": \"Github Bot\",\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Project:* ${{ github.event.repository.name }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Branch:* ${{ steps.variable.outputs.branch }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Build Status:* Failure\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Platform:* Android\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Version:* ${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Changelog Url:* ${{ steps.variable.outputs.changelog_url }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Download Url:* https://www.pgyer.com/uoud\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*When:* ${{ steps.variable.outputs.date }}\"}}]}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
