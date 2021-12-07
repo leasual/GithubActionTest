@@ -2,7 +2,17 @@
 
 ### Bug Fixes
 
+- Config commit info.(#GECI-178)
+- 3434 config bug.(#GECI-144)
+
+
+### Bug Fixes
+
 - Config commit info.(#GECI-176)
+
+### Documentation
+
+- Update changelog to 1.0.1
 
 
 ### Bug Fixes
