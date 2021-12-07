@@ -39,7 +39,8 @@ jobs:
           if [ ! -f CHANGELOG.md ];then
             touch CHANGELOG.md
           fi
-
+          echo "::set-output name=changelog_url::$(${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/blob/${GITHUB_REF##*/}/CHANGELOG.md)"
+          echo "::set-output name=branch::${GITHUB_REF##*/}"
       - name: Check lint with gradle
         run: |
           chmod +x gradlew & ./gradlew lint
@@ -90,7 +91,7 @@ jobs:
         if: success()
         uses: slackapi/slack-github-action@v1.16.0
         with:
-          payload: "{\"username\": \"Github Bot\",\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Project:* ${{ github.event.repository.name }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Branch:* ${GITHUB_REF##*/}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Build Status:* Success\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Platform:* Android\"}},{\"type\":\"mrkdwn\",\"text\":\"*Version:* ${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"},{\"type\":\"mrkdwn\",\"text\":\"*Version:* ${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"},{\"type\":\"mrkdwn\",\"text\":\"*Changelog:* ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/blob/${GITHUB_REF##*/}/CHANGELOG.md\"},{\"type\":\"mrkdwn\",\"text\":\"*Download Url:* https://www.pgyer.com/uoud\"},{\"type\":\"mrkdwn\",\"text\":\"*When:* ${{ steps.variable.outputs.date }}\"}]}"
+          payload: "{\"username\": \"Github Bot\",\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Project:* ${{ github.event.repository.name }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Branch:* ${{ steps.variable.outputs.branch }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Build Status:* Success\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Platform:* Android\"}},{\"type\":\"section\",{\"type\":\"mrkdwn\",\"text\":\"*Version:* ${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"}},{\"type\":\"section\",{\"type\":\"mrkdwn\",\"text\":\"*Changelog:* ${{ steps.variable.outputs.changelog_url }}\"}},{\"type\":\"section\",{\"type\":\"mrkdwn\",\"text\":\"*Download Url:* 'https://www.pgyer.com/uoud'\"}},{\"type\":\"section\",{\"type\":\"mrkdwn\",\"text\":\"*When:* ${{ steps.variable.outputs.date }}\"}}]}"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
@@ -99,7 +100,7 @@ jobs:
         if: failure()
         uses: slackapi/slack-github-action@v1.16.0
         with:
-          payload: "{\"username\": \"Github Bot\",\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Project:* ${{ github.event.repository.name }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Branch:* ${GITHUB_REF##*/}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Build Status:* Failure\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Platform:* Android\"}},{\"type\":\"mrkdwn\",\"text\":\"*Version:* ${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"},{\"type\":\"mrkdwn\",\"text\":\"*Version:* ${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"},{\"type\":\"mrkdwn\",\"text\":\"*When:* ${{ steps.variable.outputs.date }}\"}]}"
+          payload: "{\"username\": \"Github Bot\",\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Project:* ${{ github.event.repository.name }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Branch:* ${{ steps.variable.outputs.branch }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Build Status:* Failure\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Platform:* Android\"}},{\"type\":\"section\",{\"type\":\"mrkdwn\",\"text\":\"*Version:* ${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"}},{\"type\":\"section\",{\"type\":\"mrkdwn\",\"text\":\"*Changelog:* ${{ steps.variable.outputs.changelog_url }}\"}},{\"type\":\"section\",{\"type\":\"mrkdwn\",\"text\":\"*Download Url:* 'https://www.pgyer.com/uoud'\"}},{\"type\":\"section\",{\"type\":\"mrkdwn\",\"text\":\"*When:* ${{ steps.variable.outputs.date }}\"}}]}"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
