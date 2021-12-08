@@ -37,12 +37,10 @@ jobs:
         run: |
           echo "::set-output name=code::$(($NUM + 10000))"
           echo "::set-output name=date::$(date +'%Y-%m-%dT%H:%M')"
-          if [ ! -f CHANGELOG_DEV.md ];then
-            touch CHANGELOG_DEV.md
-          fi
-          url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/blob/${GITHUB_REF##*/}/CHANGELOG_DEV.md"
+
+          url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/blob/${{ github.event.inputs.buildBranch }}/CHANGELOG_DEV.md"
           echo "::set-output name=changelog_url::$url"
-          echo "::set-output name=branch::${GITHUB_REF##*/}"
+          echo "::set-output name=branch::${{ github.event.inputs.buildBranch }}"
       - name: Check lint with gradle
         run: |
           chmod +x gradlew & ./gradlew lint
@@ -84,9 +82,9 @@ jobs:
           echo "${{ steps.lastest_commit.outputs.id }}"
           expr ${{ steps.lastest_commit.outputs.id }} > release-last-commit.txt
       - name: Backup changelog
-        if: hashFiles('CHANGELOG_DEV.md') != ''
+        if: hashFiles('CHANGELOG.md') != ''
         run: |
-          mv CHANGELOG_DEV.md CHANGELOG_backup.md
+          mv CHANGELOG.md CHANGELOG_backup.md
       - name: Generate a changelog without header and footer
         if: hashFiles('CHANGELOG_backup.md') != ''
         uses: orhun/git-cliff-action@v1
@@ -101,8 +99,8 @@ jobs:
         run: |
           sed '3r CHANGELOG_commit.md' CHANGELOG_backup.md > CHANGELOG_lastest.md
           rm CHANGELOG_backup.md CHANGELOG_commit.md
-          mv CHANGELOG_lastest.md CHANGELOG_DEV.md
-          echo "$(cat CHANGELOG_DEV.md)"
+          mv CHANGELOG_lastest.md CHANGELOG.md
+          echo "$(cat CHANGELOG.md)"
       
       - name: Generate a changelog with header and footer
         if: hashFiles('CHANGELOG_DEV.md') == ''
@@ -111,7 +109,7 @@ jobs:
           config: .github/cliff.toml
           args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --tag ${{ github.event.inputs.buildVersionOrTag }}-beta
         env:
-          OUTPUT: CHANGELOG_DEV.md 
+          OUTPUT: CHANGELOG.md 
 
       - uses: EndBug/add-and-commit@v7
         with:
