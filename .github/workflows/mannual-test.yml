@@ -38,7 +38,7 @@ jobs:
           echo "::set-output name=code::$(($NUM + 10000))"
           echo "::set-output name=date::$(date +'%Y-%m-%dT%H:%M')"
 
-          url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/blob/${{ github.event.inputs.buildBranch }}/CHANGELOG_DEV.md"
+          url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/blob/${{ github.event.inputs.buildBranch }}/CHANGELOG.md"
           echo "::set-output name=changelog_url::$url"
           echo "::set-output name=branch::${{ github.event.inputs.buildBranch }}"
       - name: Check lint with gradle
@@ -103,7 +103,7 @@ jobs:
           echo "$(cat CHANGELOG.md)"
       
       - name: Generate a changelog with header and footer
-        if: hashFiles('CHANGELOG_DEV.md') == ''
+        if: hashFiles('CHANGELOG.md') == ''
         uses: orhun/git-cliff-action@v1
         with:
           config: .github/cliff.toml
@@ -116,7 +116,7 @@ jobs:
           message: "ci: update changelog to ${{ github.event.inputs.buildVersionOrTag }}-beta"
           default_author: github_actions
           branch: ${{ github.event.inputs.buildBranch }}
-          add: 'release-last-commit.txt CHANGELOG_DEV.md'
+          add: 'release-last-commit.txt CHANGELOG.md'
           # tag: '${{ github.event.inputs.buildVersionOrTag }} --force'
 
       - name: On sucess to send notification
