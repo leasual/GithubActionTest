@@ -3,20 +3,20 @@ on:
   workflow_dispatch:
     inputs:
       buildBranch:
-        description: 'Input which branch to build (develop/main/hotfix)'
-        required: true
-        default: 'develop'
-      buildVersionOrTag:
-        description: 'Specify version only when you want to increment the minor and major version (e.g. 1.0.0)'
-        required: true
-        default: '1.0.0'
+        # description: 'Input which branch to build (develop/main/hotfix)'
+        # required: true
+        # default: 'develop'
+      # buildVersionOrTag:
+      #   description: 'Specify version only when you want to increment the minor and major version (e.g. 1.0.0)'
+      #   required: true
+      #   default: '1.0.0'
       # uploadArtifact:
       #   description: 'Upload apk to Github Artifact (true/false)'
       #   required: false
       #   default: 'false'
       uploadCloud:
         description: 'Upload apk to Pgyer (true/false)'
-        required: true
+        required: false
         default: 'true'
 
 jobs:
@@ -28,30 +28,48 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-          ref: ${{ github.event.inputs.buildBranch }}
+          ref: develop
       
       - name: Prepear variable for build
         id: variable
         env:
           NUM: ${{ github.run_number }}
         run: |
+          if [ ! -f release-build-number.txt ]
+          then
+            touch release-build-number.txt
+            build_number=0
+          else
+            build_number="$(cat release-build-number.txt)"
+          fi
           echo "::set-output name=code::$(($NUM + 10000))"
           echo "::set-output name=date::$(date +'%Y-%m-%dT%H:%M')"
 
-          url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/blob/${{ github.event.inputs.buildBranch }}/CHANGELOG.md"
+          url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/blob/${{ github.event.inputs.buildBranch }}/CHANGELOG_DEV.md"
           echo "::set-output name=changelog_url::$url"
-          echo "::set-output name=branch::${{ github.event.inputs.buildBranch }}"
+          build_number=$((${build_number} + 1))
+          echo "::set-output name=number::$build_number"
+          expr $build_number > release-build-number.txt
+          build_number_path="${{ github.workspace }}/release-build-number.txt"
+          echo "::set-output name=build_number_path::$build_number_path"
       - name: Check lint with gradle
         run: |
           chmod +x gradlew & ./gradlew lint
 
-      - name: Update gradle version for Android
-        uses: damienaicheh/update-android-version-gradle-action@v1.0.0
-        with:
-          build-gradle-path: '${{ github.workspace }}/app/build.gradle'
-          version-code: ${{ steps.variable.outputs.code }}
-          version-name: ${{ github.event.inputs.buildVersionOrTag }}
-          print-file: true
+      # - name: Update gradle version for Android
+      #   uses: damienaicheh/update-android-version-gradle-action@v1.0.0
+      #   with:
+      #     build-gradle-path: '${{ github.workspace }}/app/build.gradle'
+      #     version-code: ${{ steps.variable.outputs.code }}
+      #     version-name: ${{ github.event.inputs.buildVersionOrTag }}
+      #     print-file: true
+      - name: Update gradle version for android
+        id: version
+        run: |
+          verion_name=$(grep -o "versionName\s\+.*" app/build.gradle | awk '{ print $2 }' | tr -d \''"\')
+          pre_verion_code=$(grep -o "versionCode\s\+.*" app/build.gradle | awk '{ print $2 }' | tr -d \''"\')
+          echo "::set-output name=version::$verion_name"
+          sed -i "s/\(versionCode[[:space:]]*\)[0-9]*/\\1${{steps.variable.outputs.number}}/" app/build.gradle
 
       - name: Build with gradle
         run: |
@@ -82,15 +100,15 @@ jobs:
           echo "${{ steps.lastest_commit.outputs.id }}"
           expr ${{ steps.lastest_commit.outputs.id }} > release-last-commit.txt
       - name: Backup changelog
-        if: hashFiles('CHANGELOG.md') != ''
+        if: hashFiles('CHANGELOG_DEV.md') != ''
         run: |
-          mv CHANGELOG.md CHANGELOG_backup.md
+          mv CHANGELOG_DEV.md CHANGELOG_backup.md
       - name: Generate a changelog without header and footer
         if: hashFiles('CHANGELOG_backup.md') != ''
         uses: orhun/git-cliff-action@v1
         with:
           config: .github/cliff.toml
-          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --tag ${{ github.event.inputs.buildVersionOrTag }}-beta --strip header
+          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --tag ${{ steps.version.outputs.version }}(${{steps.variable.outputs.number}})-beta --strip header
         env:
           OUTPUT: CHANGELOG_commit.md
 
@@ -99,52 +117,52 @@ jobs:
         run: |
           sed '3r CHANGELOG_commit.md' CHANGELOG_backup.md > CHANGELOG_lastest.md
           rm CHANGELOG_backup.md CHANGELOG_commit.md
-          mv CHANGELOG_lastest.md CHANGELOG.md
-          echo "$(cat CHANGELOG.md)"
+          mv CHANGELOG_lastest.md CHANGELOG_DEV.md
+          echo "$(cat CHANGELOG_DEV.md)"
       
       - name: Generate a changelog with header and footer
-        if: hashFiles('CHANGELOG.md') == ''
+        if: hashFiles('CHANGELOG_DEV.md') == ''
         uses: orhun/git-cliff-action@v1
         with:
           config: .github/cliff.toml
-          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --tag ${{ github.event.inputs.buildVersionOrTag }}-beta
+          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --tag ${{ steps.version.outputs.version }}(${{steps.variable.outputs.number}})-beta
         env:
-          OUTPUT: CHANGELOG.md 
+          OUTPUT: CHANGELOG_DEV.md 
 
       - uses: EndBug/add-and-commit@v7
         with:
           message: "ci: update changelog to ${{ github.event.inputs.buildVersionOrTag }}-beta"
           default_author: github_actions
-          branch: ${{ github.event.inputs.buildBranch }}
-          add: 'release-last-commit.txt CHANGELOG.md'
+          branch: develop
+          add: 'release-last-commit.txt CHANGELOG_DEV.md release-build-number.txt'
           # tag: '${{ github.event.inputs.buildVersionOrTag }} --force'
 
-      #{"msgtype": "markdown","markdown": {"content": "Application daily build update:\n>Project:<font color=\"comment\">Project</font>>Branch:<font color=\"comment\">Branch</font>>Build Status:<font color=\"warning\">Success</font>\n>Platform:<font color=\"comment\">Platform</font>\n>Version:<font color=\"comment\">Version</font>\n>Changelog Url:<font color=\"comment\">Changelog</font>\n>Download Url:<font color=\"comment\">Download</font>\n>When:<font color=\"comment\">When</font>", "mentioned_list":["@all"]}}
+      #{"msgtype": "markdown","markdown": {"content": "Application daily build update:\n>Project:<font color=\"warning\">Project</font>>Branch:<font color=\"warning\">Branch</font>>Build Status:<font color=\"warning\">Success</font>\n>Platform:<font color=\"warning\">Platform</font>\n>Version:<font color=\"warning\">Version</font>\n>Changelog Url:<font color=\"warning\">Changelog</font>\n>Download Url:<font color=\"warning\">Download</font>\n>When:<font color=\"warning\">When</font>", "mentioned_list":["@all"]}}
       - name: On success to send notification to wechat
         if: success()
         run: |
-          curl 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_NOTIFICATION_KEY }}' -H 'Content-Type: application/json' -d "{\"msgtype\": \"markdown\",\"markdown\": {\"content\": \"Application daily build update:\\n>Project:<font color=\\\"comment\\\">${{ github.event.repository.name }}</font>\\n>Branch:<font color=\\\"comment\\\">${{ steps.variable.outputs.branch }}</font>\\n>Build Status:<font color=\\\"warning\\\">Success</font>\\n>Platform:<font color=\\\"comment\\\">Android</font>\\n>Version:<font color=\\\"comment\\\">${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})</font>\\n>Changelog Url:<font color=\\\"comment\\\">[click this](${{ steps.variable.outputs.changelog_url }})</font>\\n>Download Url:<font color=\\\"comment\\\">[click this](https://www.pgyer.com/uoud)</font>\\n>When:<font color=\\\"comment\\\">${{ steps.variable.outputs.date }}</font>\", \"mentioned_list\":[\"@all\"]}}"
+          curl 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_NOTIFICATION_KEY }}' -H 'Content-Type: application/json' -d "{\"msgtype\": \"markdown\",\"markdown\": {\"content\": \"Application daily build update:\\n>Project:<font color=\\\"warning\\\">${{ github.event.repository.name }}</font>\\n>Branch:<font color=\\\"comment\\\">${{ steps.variable.outputs.branch }}</font>\\n>Build Status:<font color=\\\"warning\\\">Success</font>\\n>Platform:<font color=\\\"warning\\\">Android</font>\\n>Version:<font color=\\\"warning\\\">${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})</font>\\n>Changelog Url:<font color=\\\"warning\\\">[click this](${{ steps.variable.outputs.changelog_url }})</font>\\n>Download Url:<font color=\\\"warning\\\">[click this](https://www.pgyer.com/uoud)</font>\\n>When:<font color=\\\"warning\\\">${{ steps.variable.outputs.date }}</font>\", \"mentioned_list\":[\"@all\"]}}"
 
       - name: On failure to send notification to wechat
         if: failure()
         run: |
-          curl 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_NOTIFICATION_KEY }}' -H 'Content-Type: application/json' -d "{\"msgtype\": \"markdown\",\"markdown\": {\"content\": \"Application daily build update:\\n>Project:<font color=\\\"comment\\\">${{ github.event.repository.name }}</font>\\n>Branch:<font color=\\\"comment\\\">${{ steps.variable.outputs.branch }}</font>\\n>Build Status:<font color=\\\"warning\\\">Faiure</font>\\n>Platform:<font color=\\\"comment\\\">Android</font>\\n>Version:<font color=\\\"comment\\\">${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})</font>\\n>Changelog Url:<font color=\\\"comment\\\">[click this](${{ steps.variable.outputs.changelog_url }})</font>\\n>Download Url:<font color=\\\"comment\\\">[click this](https://www.pgyer.com/uoud)</font>\\n>When:<font color=\\\"comment\\\">${{ steps.variable.outputs.date }}</font>\", \"mentioned_list\":[\"@all\"]}}"
+          curl 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_NOTIFICATION_KEY }}' -H 'Content-Type: application/json' -d "{\"msgtype\": \"markdown\",\"markdown\": {\"content\": \"Application daily build update:\\n>Project:<font color=\\\"warning\\\">${{ github.event.repository.name }}</font>\\n>Branch:<font color=\\\"warning\\\">${{ steps.variable.outputs.branch }}</font>\\n>Build Status:<font color=\\\"warning\\\">Faiure</font>\\n>Platform:<font color=\\\"warning\\\">Android</font>\\n>Version:<font color=\\\"warning\\\">${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})</font>\\n>Changelog Url:<font color=\\\"warning\\\">[click this](${{ steps.variable.outputs.changelog_url }})</font>\\n>Download Url:<font color=\\\"warning\\\">[click this](https://www.pgyer.com/uoud)</font>\\n>When:<font color=\\\"warning\\\">${{ steps.variable.outputs.date }}</font>\", \"mentioned_list\":[\"@all\"]}}"
 
 
-      - name: On sucess to send notification
-        if: success()
-        uses: slackapi/slack-github-action@v1.16.0
-        with:
-          payload: "{\"username\": \"Github Bot\",\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Project:* ${{ github.event.repository.name }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Branch:* ${{ steps.variable.outputs.branch }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Build Status:* Success\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Platform:* Android\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Version:* ${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Changelog Url:* ${{ steps.variable.outputs.changelog_url }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Download Url:* https://www.pgyer.com/uoud\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*When:* ${{ steps.variable.outputs.date }}\"}}]}"
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+      # - name: On sucess to send notification
+      #   if: success()
+      #   uses: slackapi/slack-github-action@v1.16.0
+      #   with:
+      #     payload: "{\"username\": \"Github Bot\",\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Project:* ${{ github.event.repository.name }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Branch:* ${{ steps.variable.outputs.branch }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Build Status:* Success\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Platform:* Android\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Version:* ${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Changelog Url:* ${{ steps.variable.outputs.changelog_url }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Download Url:* https://www.pgyer.com/uoud\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*When:* ${{ steps.variable.outputs.date }}\"}}]}"
+      #   env:
+      #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      #     SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
 
-      - name: On failure to send notification
-        if: failure()
-        uses: slackapi/slack-github-action@v1.16.0
-        with:
-          payload: "{\"username\": \"Github Bot\",\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Project:* ${{ github.event.repository.name }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Branch:* ${{ steps.variable.outputs.branch }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Build Status:* Failure\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Platform:* Android\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Version:* ${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Changelog Url:* ${{ steps.variable.outputs.changelog_url }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Download Url:* https://www.pgyer.com/uoud\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*When:* ${{ steps.variable.outputs.date }}\"}}]}"
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+      # - name: On failure to send notification
+      #   if: failure()
+      #   uses: slackapi/slack-github-action@v1.16.0
+      #   with:
+      #     payload: "{\"username\": \"Github Bot\",\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Project:* ${{ github.event.repository.name }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Branch:* ${{ steps.variable.outputs.branch }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Build Status:* Failure\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Platform:* Android\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Version:* ${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Changelog Url:* ${{ steps.variable.outputs.changelog_url }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Download Url:* https://www.pgyer.com/uoud\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*When:* ${{ steps.variable.outputs.date }}\"}}]}"
+      #   env:
+      #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      #     SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
