@@ -14,10 +14,10 @@ on:
       #   description: 'Upload apk to Github Artifact (true/false)'
       #   required: false
       #   default: 'false'
-      uploadCloud:
-        description: 'Upload apk to Pgyer (true/false)'
-        required: true
-        default: 'true'
+      # uploadCloud:
+      #   description: 'Upload apk to Pgyer (true/false)'
+      #   required: true
+      #   default: 'true'
 
 jobs:
   build-android-release:
@@ -46,13 +46,16 @@ jobs:
         run: |
           chmod +x gradlew & ./gradlew lint
 
-      - name: Update gradle version for Android
-        uses: damienaicheh/update-android-version-gradle-action@v1.0.0
-        with:
-          build-gradle-path: '${{ github.workspace }}/app/build.gradle'
-          version-code: ${{ steps.variable.outputs.code }}
-          version-name: ${{ github.event.inputs.buildVersionOrTag }}
-          print-file: true
+      - name: Update gradle version for android
+        id: version
+        run: |
+          verion_name=$(grep -o "versionName\s\+.*" app/build.gradle | awk '{ print $2 }' | tr -d \''"\')
+          pre_verion_code=$(grep -o "versionCode\s\+.*" app/build.gradle | awk '{ print $2 }' | tr -d \''"\')
+          version_code=$(pre_verion_code + 1)
+          echo "$version_code"
+          echo "::set-output name=version::$verion_name"
+          sed -i "s/\(versionCode[[:space:]]*\)[0-9]*/\\1${version_code}/" app/build.gradle
+          cat app/build.gradle
 
       - name: Build with gradle
         run: |
@@ -62,7 +65,7 @@ jobs:
         id: pushToPgyer
         run: |
           curl -F 'file=@${{ github.workspace }}/app/build/outputs/apk/release/app-release-unsigned.apk' -F '_api_key=${{secrets.PGYER_API_KEY}}' https://www.pgyer.com/apiv2/app/upload
-        continue-on-error: true
+        # continue-on-error: true
 
       # - name: Create tag version increment auto
       #   id: tag
@@ -77,7 +80,7 @@ jobs:
         uses: orhun/git-cliff-action@v1
         with:
           config: .github/cliff.toml
-          args: --unreleased --tag ${{ github.event.inputs.buildVersionOrTag }} --prepend CHANGELOG.md
+          args: --verbose --tag ${{ github.event.inputs.buildVersionOrTag }}
         env:
           OUTPUT: CHANGELOG.md 
 
@@ -85,14 +88,15 @@ jobs:
         with:
           message: "ci: update changelog to ${{ github.event.inputs.buildVersionOrTag }}"
           default_author: github_actions
-          add: '.github/release-last-commit.txt CHANGELOG.md'
+           branch: main
+          add: '.github/release-last-commit.txt CHANGELOG.md app/build.gradle'
           tag: '${{ github.event.inputs.buildVersionOrTag }} --force'
 
       - name: On sucess to send notification
         if: success()
         uses: slackapi/slack-github-action@v1.16.0
         with:
-          payload: "{\"username\": \"Github Bot\",\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Project:* ${{ github.event.repository.name }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Branch:* ${{ steps.variable.outputs.branch }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Build Status:* Success\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Platform:* Android\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Version:* ${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Changelog Url:* ${{ steps.variable.outputs.changelog_url }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Download Url:* https://www.pgyer.com/uoud\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*When:* ${{ steps.variable.outputs.date }}\"}}]}"
+          payload: "{\"username\": \"Github Bot\",\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Project:* ${{ github.event.repository.name }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Branch:* ${GITHUB_REF##*/}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Build Status:* Success\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Platform:* Android\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Version:* ${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Changelog Url:* ${{ steps.variable.outputs.changelog_url }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Download Url:* https://www.pgyer.com/uoud\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*When:* ${{ steps.variable.outputs.date }}\"}}]}"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
@@ -101,7 +105,7 @@ jobs:
         if: failure()
         uses: slackapi/slack-github-action@v1.16.0
         with:
-          payload: "{\"username\": \"Github Bot\",\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Project:* ${{ github.event.repository.name }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Branch:* ${{ steps.variable.outputs.branch }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Build Status:* Failure\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Platform:* Android\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Version:* ${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Changelog Url:* ${{ steps.variable.outputs.changelog_url }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Download Url:* https://www.pgyer.com/uoud\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*When:* ${{ steps.variable.outputs.date }}\"}}]}"
+          payload: "{\"username\": \"Github Bot\",\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Project:* ${{ github.event.repository.name }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Branch:* ${GITHUB_REF##*/}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Build Status:* Failure\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Platform:* Android\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Version:* ${{ github.event.inputs.buildVersionOrTag }}(${{ steps.variable.outputs.code }})\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Changelog Url:* ${{ steps.variable.outputs.changelog_url }}\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Download Url:* https://www.pgyer.com/uoud\"}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*When:* ${{ steps.variable.outputs.date }}\"}}]}"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
