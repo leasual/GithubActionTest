@@ -70,7 +70,7 @@ jobs:
           verion_name=$(grep -o "versionName\s\+.*" app/build.gradle | awk '{ print $2 }' | tr -d \''"\')
           pre_verion_code=$(grep -o "versionCode\s\+.*" app/build.gradle | awk '{ print $2 }' | tr -d \''"\')
           echo "::set-output name=version::$verion_name"
-          sed -i "s/\(versionCode[[:space:]]*\)[0-9]*/\\1${{steps.variable.outputs.number}}/" app/build.gradle
+          sed -i "s/\(versionCode[[:space:]]*\)[0-9]*/\\1${{ steps.variable.outputs.number }}/" app/build.gradle
 
       # - name: Build with gradle
       #   run: |
@@ -109,7 +109,7 @@ jobs:
         uses: orhun/git-cliff-action@v1
         with:
           config: .github/cliff.toml
-          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --tag ${{ steps.version.outputs.version }}(${{steps.variable.outputs.number}})-beta --strip header
+          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --tag ${{ steps.version.outputs.version }}(${{ steps.variable.outputs.number }})-beta --strip header
         env:
           OUTPUT: CHANGELOG_commit.md
 
@@ -126,13 +126,13 @@ jobs:
         uses: orhun/git-cliff-action@v1
         with:
           config: .github/cliff.toml
-          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --tag ${{ steps.version.outputs.version }}(${{steps.variable.outputs.number}})-beta
+          args: --verbose ${{ steps.lastest_commit.outputs.last_id }}..HEAD --tag ${{ steps.version.outputs.version }}(${{ steps.variable.outputs.number }})-beta
         env:
           OUTPUT: CHANGELOG_DEV.md 
 
       - uses: EndBug/add-and-commit@v7
         with:
-          message: "ci: update changelog to ${{ steps.version.outputs.version }}(${{steps.variable.outputs.number}})-beta"
+          message: "ci: update changelog to ${{ steps.version.outputs.version }}(${{ steps.variable.outputs.number }})-beta"
           default_author: github_actions
           branch: develop
           add: 'release-last-commit.txt CHANGELOG_DEV.md release-build-number.txt'
@@ -142,12 +142,12 @@ jobs:
       - name: On success to send notification to wechat
         if: success()
         run: |
-          curl 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_NOTIFICATION_KEY }}' -H 'Content-Type: application/json' -d "{\"msgtype\": \"markdown\",\"markdown\": {\"content\": \"Application daily build update:\\n>Project:<font color=\\\"warning\\\">${{ github.event.repository.name }}</font>\\n>Branch:<font color=\\\"warning\\\">${GITHUB_REF##*/}</font>\\n>Build Status:<font color=\\\"warning\\\">Success</font>\\n>Platform:<font color=\\\"warning\\\">Android</font>\\n>Version:<font color=\\\"warning\\\">${{ steps.version.outputs.version }}(${{steps.variable.outputs.number}})</font>\\n>Changelog Url:<font color=\\\"warning\\\">[click this](${{ steps.variable.outputs.changelog_url }})</font>\\n>Download Url:<font color=\\\"warning\\\">[click this](https://www.pgyer.com/uoud)</font>\\n>When:<font color=\\\"warning\\\">${{ steps.variable.outputs.date }}</font>\", \"mentioned_list\":[\"@all\"]}}"
+          curl 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_NOTIFICATION_KEY }}' -H 'Content-Type: application/json' -d "{\"msgtype\": \"markdown\",\"markdown\": {\"content\": \"Application daily build update:\\n>Project:<font color=\\\"warning\\\">${{ github.event.repository.name }}</font>\\n>Branch:<font color=\\\"warning\\\">${{ steps.variable.outputs.number }}</font>\\n>Build Status:<font color=\\\"warning\\\">Success</font>\\n>Platform:<font color=\\\"warning\\\">Android</font>\\n>Version:<font color=\\\"warning\\\">${{ steps.version.outputs.version }}(${{steps.variable.outputs.number}})</font>\\n>Changelog Url:<font color=\\\"warning\\\">[click this](${{ steps.variable.outputs.changelog_url }})</font>\\n>Download Url:<font color=\\\"warning\\\">[click this](https://www.pgyer.com/uoud)</font>\\n>When:<font color=\\\"warning\\\">${{ steps.variable.outputs.date }}</font>\", \"mentioned_list\":[\"@all\"]}}"
 
       - name: On failure to send notification to wechat
         if: failure()
         run: |
-          curl 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_NOTIFICATION_KEY }}' -H 'Content-Type: application/json' -d "{\"msgtype\": \"markdown\",\"markdown\": {\"content\": \"Application daily build update:\\n>Project:<font color=\\\"warning\\\">${{ github.event.repository.name }}</font>\\n>Branch:<font color=\\\"warning\\\">${GITHUB_REF##*/}</font>\\n>Build Status:<font color=\\\"warning\\\">Faiure</font>\\n>Platform:<font color=\\\"warning\\\">Android</font>\\n>Version:<font color=\\\"warning\\\">${{ steps.version.outputs.version }}(${{steps.variable.outputs.number}})</font>\\n>Changelog Url:<font color=\\\"warning\\\">[click this](${{ steps.variable.outputs.changelog_url }})</font>\\n>Download Url:<font color=\\\"warning\\\">[click this](https://www.pgyer.com/uoud)</font>\\n>When:<font color=\\\"warning\\\">${{ steps.variable.outputs.date }}</font>\", \"mentioned_list\":[\"@all\"]}}"
+          curl 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_NOTIFICATION_KEY }}' -H 'Content-Type: application/json' -d "{\"msgtype\": \"markdown\",\"markdown\": {\"content\": \"Application daily build update:\\n>Project:<font color=\\\"warning\\\">${{ github.event.repository.name }}</font>\\n>Branch:<font color=\\\"warning\\\">${{ steps.variable.outputs.number }}</font>\\n>Build Status:<font color=\\\"warning\\\">Faiure</font>\\n>Platform:<font color=\\\"warning\\\">Android</font>\\n>Version:<font color=\\\"warning\\\">${{ steps.version.outputs.version }}(${{steps.variable.outputs.number}})</font>\\n>Changelog Url:<font color=\\\"warning\\\">[click this](${{ steps.variable.outputs.changelog_url }})</font>\\n>Download Url:<font color=\\\"warning\\\">[click this](https://www.pgyer.com/uoud)</font>\\n>When:<font color=\\\"warning\\\">${{ steps.variable.outputs.date }}</font>\", \"mentioned_list\":[\"@all\"]}}"
 
 
       # - name: On sucess to send notification
